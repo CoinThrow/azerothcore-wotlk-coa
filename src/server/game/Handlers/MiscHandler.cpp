@@ -99,6 +99,11 @@ void WorldSession::HandleRepopRequestOpcode(WorldPacket& recv_data)
 // offline inspection instead of being rejected when its shape changes.
 void WorldSession::HandleAnticheatAlert(WorldPacket& recvData)
 {
+    // The whole intake pipeline (log, DB row, GM notice, flood kick) is gated
+    // on the Warden switch so servers can disable client alert collection.
+    if (!sWorld->getBoolConfig(CONFIG_WARDEN_ENABLED))
+        return;
+
     std::string reason;
     if (recvData.rpos() + sizeof(uint32) <= recvData.size())
         recvData >> reason;
