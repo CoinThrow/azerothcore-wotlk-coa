@@ -54,6 +54,7 @@
 #include "World.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include "WorldSessionMgr.h"
 #include <algorithm>
 #include <zlib.h>
 
@@ -142,10 +143,22 @@ void WorldSession::HandleAnticheatAlert(WorldPacket& recvData)
         return;
     }
 
-    // Heads-up for online GMs, same delivery channel as ticket notifications.
-    ChatHandler(nullptr).SendGlobalGMSysMessage(Acore::StringFormat(
+    // Heads-up for online GMs (security level GAMEMASTER and above). The fork's
+    // RBAC data only carries command permissions (no receive-global-gm-text
+    // permission), so target GMs by security level instead of the ticket path's
+    // RBAC-permission channel.
+    WorldPacket gmData;
+    ChatHandler::BuildChatPacket(gmData, CHAT_MSG_SYSTEM, LANG_UNIVERSAL, nullptr, nullptr, Acore::StringFormat(
         "[Anticheat] {} (account {}, guid {}) reported {} ({} bytes)",
-        GetPlayerName(), GetAccountId(), guid.ToString(), reason, recvData.size()).c_str());
+        GetPlayerName(), GetAccountId(), guid.ToString(), reason, recvData.size()));
+
+    for (auto const& itr : sWorldSessionMgr->GetAllSessions())
+    {
+        WorldSession* session = itr.second;
+        if (session && session->GetPlayer() && session->GetPlayer()->IsInWorld() &&
+            session->GetSecurity() >= SEC_GAMEMASTER)
+            session->SendPacket(&gmData);
+    }
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_PLAYER_ANTICHEAT_ALERT);
     stmt->SetData(0, GetAccountId());
