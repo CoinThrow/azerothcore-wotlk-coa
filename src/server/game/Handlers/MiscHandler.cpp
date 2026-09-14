@@ -137,9 +137,11 @@ void WorldSession::HandleAnticheatAlert(WorldPacket& recvData)
 
     if (++_anticheatAlertsInWindow > ALERT_WINDOW_LIMIT)
     {
-        LOG_DEBUG("anticheat", "Dropped {} alert(s) beyond {} in {}s for account {} (guid {})",
-            _anticheatAlertsInWindow - ALERT_WINDOW_LIMIT, ALERT_WINDOW_LIMIT, ALERT_WINDOW_SECONDS,
-            GetAccountId(), guid.ToString());
+        // A broken or hostile client is flooding alerts. Disconnect it so the
+        // log and the character database cannot be spammed.
+        LOG_WARN("anticheat", "Account {} (guid {}) exceeded the anticheat alert limit ({} alerts per {}s); disconnecting",
+            GetAccountId(), guid.ToString(), ALERT_WINDOW_LIMIT, ALERT_WINDOW_SECONDS);
+        KickPlayer("Anticheat alert flood");
         return;
     }
 
