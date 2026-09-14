@@ -47,6 +47,7 @@
 #include "ScriptMgr.h"
 #include "SocialMgr.h"
 #include "Spell.h"
+#include "StringFormat.h"
 #include "Util.h"
 #include "Vehicle.h"
 #include "WhoListCacheMgr.h"
@@ -140,6 +141,11 @@ void WorldSession::HandleAnticheatAlert(WorldPacket& recvData)
             GetAccountId(), guid.ToString());
         return;
     }
+
+    // Heads-up for online GMs, same delivery channel as ticket notifications.
+    ChatHandler(nullptr).SendGlobalGMSysMessage(Acore::StringFormat(
+        "[Anticheat] {} (account {}, guid {}) reported {} ({} bytes)",
+        GetPlayerName(), GetAccountId(), guid.ToString(), reason, recvData.size()).c_str());
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_PLAYER_ANTICHEAT_ALERT);
     stmt->SetData(0, GetAccountId());
