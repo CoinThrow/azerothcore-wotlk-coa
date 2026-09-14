@@ -47,11 +47,13 @@
 #include "ScriptMgr.h"
 #include "SocialMgr.h"
 #include "Spell.h"
+#include "Util.h"
 #include "Vehicle.h"
 #include "WhoListCacheMgr.h"
 #include "World.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
+#include <algorithm>
 #include <zlib.h>
 
 #include "Corpse.h"
@@ -84,6 +86,69 @@ void WorldSession::HandleRepopRequestOpcode(WorldPacket& recv_data)
     GetPlayer()->RemovePet(nullptr, PET_SAVE_NOT_IN_SLOT, true);
     GetPlayer()->BuildPlayerRepop();
     GetPlayer()->RepopAtGraveyard();
+}
+
+// Ascension client extension opcode 0x51F. The client's Extensions.dll anti-tamper
+// layer reports local detections here (anti-debug checks, debugger window/process
+// names, injected DLL names, ...). The first string is the alert type such as
+// "AntiDebug" or "DBG_ISDEBUGGERPRESENT"; further fields carry the client process
+// name and local diagnostic values. Later builds append fields, so the payload is
+// read defensively: everything after the alert type is recorded as raw hex for
+// offline inspection instead of being rejected when its shape changes.
+void WorldSession::HandleAnticheatAlert(WorldPacket& recvData)
+{
+    std::string reason;
+    if (recvData.rpos() + sizeof(uint32) <= recvData.size())
+        recvData >> reason;
+
+    if (reason.empty())
+        return;
+
+    // Bound untrusted client text before logging or storing it.
+    if (reason.size() > 64)
+        reason.resize(64);
+
+    std::string details;
+    if (recvData.rpos() < recvData.size())
+    {
+        size_t const remaining = recvData.size() - recvData.rpos();
+        details = Acore::Impl::ByteArrayToHexStr(recvData.contents() + recvData.rpos(),
+            std::min<size_t>(remaining, 128));
+    }
+
+    ObjectGuid const guid = GetPlayer() ? GetPlayer()->GetGUID() : ObjectGuid::Empty;
+
+    LOG_WARN("anticheat", "{} (account {}, guid {}, ip {}) reported {} ({} bytes): {}",
+        GetPlayerName(), GetAccountId(), guid.ToString(), GetRemoteAddress(), reason, recvData.size(), details);
+
+    // The client can send one alert per detection, and a broken or hostile client can
+    // burst them. Keep the session from flooding the log and the character database.
+    constexpr uint32 ALERT_WINDOW_SECONDS = 10;
+    constexpr uint32 ALERT_WINDOW_LIMIT = 5;
+
+    uint32 const now = uint32(GameTime::GetGameTime().count());
+    if (_timeLastAnticheatAlertWindow == 0 || now - _timeLastAnticheatAlertWindow >= ALERT_WINDOW_SECONDS)
+    {
+        _timeLastAnticheatAlertWindow = now;
+        _anticheatAlertsInWindow = 0;
+    }
+
+    if (++_anticheatAlertsInWindow > ALERT_WINDOW_LIMIT)
+    {
+        LOG_DEBUG("anticheat", "Dropped {} alert(s) beyond {} in {}s for account {} (guid {})",
+            _anticheatAlertsInWindow - ALERT_WINDOW_LIMIT, ALERT_WINDOW_LIMIT, ALERT_WINDOW_SECONDS,
+            GetAccountId(), guid.ToString());
+        return;
+    }
+
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_PLAYER_ANTICHEAT_ALERT);
+    stmt->SetData(0, GetAccountId());
+    stmt->SetData(1, guid.GetCounter());
+    stmt->SetData(2, GetPlayerName());
+    stmt->SetData(3, reason);
+    stmt->SetData(4, details);
+    stmt->SetData(5, uint32(recvData.size()));
+    CharacterDatabase.Execute(stmt);
 }
 
 void WorldSession::HandleGossipSelectOptionOpcode(WorldPacket& recv_data)
