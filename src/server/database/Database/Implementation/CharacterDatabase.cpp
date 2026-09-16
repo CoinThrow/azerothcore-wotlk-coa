@@ -39,7 +39,7 @@ void CharacterDatabaseConnection::DoPrepareStatements()
     // auth-side realm character count) and the active-only count the realm
     // limit is checked against.
     PrepareStatement(CHAR_SEL_CHAR_CREATE_COUNTS, "SELECT COUNT(`c`.`guid`), "
-                     "COALESCE(SUM(CASE WHEN `s`.`active` IS NULL OR `s`.`active` <> 0 THEN 1 ELSE 0 END), 0) "
+                     "COUNT(CASE WHEN `s`.`active` IS NULL OR `s`.`active` <> 0 THEN 1 END) "
                      "FROM `characters` AS `c` "
                      "LEFT JOIN `character_ascension_state` AS `s` ON `s`.`guid` = `c`.`guid` "
                      "WHERE `c`.`account` = ?", CONNECTION_ASYNC);

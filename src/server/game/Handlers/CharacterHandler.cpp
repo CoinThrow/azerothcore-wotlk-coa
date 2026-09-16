@@ -440,6 +440,11 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             Field* fields = result->Fetch();
             // Active count, which is what the realm list shows and what the
             // realm limit is checked against; the stored total is only logged.
+            // Both columns must be integer typed: Field::Get<T>() reinterprets a
+            // prepared statement's raw buffer, and a SUM(CASE ...) is typed
+            // DECIMAL, which the binary protocol sends as text (so it would be
+            // read as the ASCII code of its first digit). COUNT(CASE ...) is a
+            // BIGINT and reads correctly.
             createInfo->CharCount = uint8(fields[1].Get<uint64>());
             uint8 const activeCharCount = createInfo->CharCount;
             uint8 const storedCharCount = uint8(fields[0].Get<uint64>());
