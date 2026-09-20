@@ -1,5 +1,6 @@
 // CoA talent state derived from a character's spellbook: which catalog entries it holds at which rank, what those
-// ranks cost, and the wire form the client's character-advancement service exchanges for that state.
+// ranks cost, which automatic grants a build carries, and the wire form the client's character-advancement service
+// exchanges for that state.
 #ifndef ASCENSION_COA_TALENT_STATE_H
 #define ASCENSION_COA_TALENT_STATE_H
 
@@ -12,6 +13,7 @@
 namespace AscensionCoATalentState
 {
 using HasSpell = std::function<bool(std::uint32_t)>;
+using RequirementHeld = std::function<bool(AscensionCompatData::CoATalentEntry const&)>;
 
 struct KnownEntry
 {
@@ -24,6 +26,21 @@ std::uint32_t KnownRank(AscensionCompatData::CoATalentEntry const& entry, HasSpe
 
 // Every entry of the class the character holds a rank of, automatic ones included. Sorted by entry id.
 std::vector<KnownEntry> KnownEntries(std::uint8_t classId, HasSpell const& hasSpell);
+
+// The rule behind every automatic grant: a cost-free catalog entry of that class and specialization at
+// that level, not a selectable free choice, whose CoAAutomaticDependencies row's entries the build holds
+// (`requirementHeld` answers for one of them). The live grant pass answers its requirements from the
+// player's spellbook, the per-slot derivation from the slot's own picks, so both read the same rule.
+bool IsAutomaticEntryAvailable(AscensionCompatData::CoATalentEntry const& entry, std::uint8_t classId,
+                               std::uint16_t specializationId, std::uint8_t level,
+                               RequirementHeld const& requirementHeld);
+
+// The entries a build holds without owning a rank spell of them, through the rule above over the build's
+// own known set. A slot that is not the active one is described from its stored picks instead of the
+// live spellbook, which holds the active slot's grants. Ranks follow what KnownRank reports after the
+// module's top-rank grant. Sorted by entry id.
+std::vector<KnownEntry> AutomaticEntries(std::uint8_t classId, std::uint16_t specializationId,
+                                         std::uint8_t level, std::vector<KnownEntry> const& held);
 
 struct SpentPoints
 {
