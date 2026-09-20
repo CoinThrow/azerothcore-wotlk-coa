@@ -1301,9 +1301,11 @@ public:
 
     // Slot one has no tome: the client's specification list gates every row on its swap spell being
     // known, and Tomes of Specialization only exist from slot two on. Grant it so the starting slot
-    // stays reachable, like on a live character.
+    // stays reachable, like on a live character. learnSpell, not addSpell: this hook runs after the
+    // initial spell list has gone out, and only learnSpell announces the grant (SMSG_LEARNED_SPELL), so
+    // the client's IsSpellKnown gate would otherwise stay closed for slot one until the next login.
     if (!player->HasSpell(ASCENSION_SPEC_SWAP_SPELLS[0]))
-        player->addSpell(ASCENSION_SPEC_SWAP_SPELLS[0], SPEC_MASK_ALL, true);
+        player->learnSpell(ASCENSION_SPEC_SWAP_SPELLS[0]);
 
     SynchronizeProgression(player);
     SynchronizeProficiencies(player);
@@ -1690,7 +1692,8 @@ public:
   // active-spec and known-entries packets alone leave the trees on the slot that was left.
 
   /// The entries one slot would hold: the active slot answers with the live spellbook state; every other
-  /// slot with its stored picks over the automatic entries the slot's specialization always carries.
+  /// slot with its stored picks plus the automatic entries its specialization carries, derived from the
+  /// catalog rather than from the spellbook, which holds the slot that is currently active.
   std::vector<AscensionCoATalentState::KnownEntry> SlotKnownEntries(Player* player, uint32 slot)
   {
     if (slot == ActiveSpecSlot(player))
@@ -1698,16 +1701,6 @@ public:
 
     uint32 const slotSpec = StoredSlotSpec(player, slot);
     std::vector<AscensionCoATalentState::KnownEntry> known;
-
-    for (AscensionCoATalentState::KnownEntry const& live : KnownTalentEntries(player))
-    {
-      AscensionCompatData::CoATalentEntry const* entry = FindTalentEntry(live.EntryId);
-      if (!entry || entry->AECost || entry->TECost || GetSelectableFreeGroup(entry->EntryId))
-        continue;
-      if (entry->SpecId && entry->SpecId != slotSpec)
-        continue;
-      known.push_back(live);
-    }
 
     if (PlayerSettingVector const* values = player->FindPlayerSettings(SlotBuildSetting(slot)))
     {
@@ -1726,6 +1719,13 @@ public:
         known.push_back({ entry->EntryId, rank });
       }
     }
+
+    // The automatic grants are not part of the stored record (a slot's picks never include cost-free
+    // entries) and the spellbook stopped holding them when the slot was left, so they come from the
+    // catalog, with the slot's own picks as the known set their requirements resolve against.
+    for (AscensionCoATalentState::KnownEntry const& entry :
+         AscensionCoATalentState::AutomaticEntries(player->getClass(), uint16(slotSpec), player->GetLevel(), known))
+      known.push_back(entry);
 
     std::sort(known.begin(), known.end(),
               [](AscensionCoATalentState::KnownEntry const& left, AscensionCoATalentState::KnownEntry const& right)
@@ -2145,12 +2145,18 @@ public:
       return;
     for (uint64 const requested : requests)
     {
-      Player* target = ObjectAccessor::FindPlayer(ObjectGuid(requested));
+      // Same map only: this runs on the viewer's update thread, and a player from another map belongs
+      // to that map's thread. The answer reads the target's spellbook and its player settings, and
+      // GetPlayerSetting inserts missing settings, so a cross-map target would race its owner's
+      // updates. ObjectAccessor::GetPlayer(WorldObject const&, ...) returns the player only when the
+      // map is the viewer's, the same shape the core's own CMSG_INSPECT uses.
+      Player* target = ObjectAccessor::GetPlayer(*player, ObjectGuid(requested));
       if (!target)
       {
         SendCharacterAdvancementInspectFailure(player, "CA_INSPECT_TARGET_NOT_FOUND");
-        LOG_DEBUG("module.ascension_compat", "Character Advancement inspection from {} for unknown GUID {}",
-                  player->GetName(), requested);
+        LOG_DEBUG("module.ascension_compat",
+                  "Character Advancement inspection from {} for GUID {} not on its map", player->GetName(),
+                  requested);
         continue;
       }
       if (!IsAscensionCustomClass(target))
@@ -2425,8 +2431,10 @@ public:
     uint32 currentSpec = GetActiveSpecialization(player);
     if (!currentSpec)
       currentSpec = StoredSlotSpec(player, currentSlot);
-    if (currentSpec)
-      StoreSlotBuild(player, currentSlot, currentSpec);
+    // Stored even with no specialization chosen: the class tree is shared and the removal pass below
+    // takes its ranks too, so skipping the store would drop them for good. A record of 0 is only the
+    // class tree, and RestoreSlotBuild reads it the same way.
+    StoreSlotBuild(player, currentSlot, currentSpec);
 
     uint32 const targetSpec = StoredSlotSpec(player, targetSlot);
 
@@ -2456,7 +2464,8 @@ public:
     player->UpdatePlayerSetting(ASCENSION_ACTIVE_SPEC_SETTING, 0, targetSpec);
     player->UpdatePlayerSetting(ASCENSION_ACTIVE_SLOT_SETTING, 0, targetSlot);
 
-    uint32 const restored = targetSpec ? RestoreSlotBuild(player, targetSlot, targetSpec) : 0;
+    // Also with no specialization chosen: the stored record still holds the slot's class-tree picks.
+    uint32 const restored = RestoreSlotBuild(player, targetSlot, targetSpec);
     uint32 const granted = SynchronizeProgression(player);
 
     SendCharacterAdvancementState(player);
@@ -2590,39 +2599,15 @@ public:
     static bool CanGrantAutomaticEntry(Player const* player,
         AscensionCompatData::CoATalentEntry const& entry, uint32 specializationId)
     {
-        if (entry.ClassId != player->getClass() ||
-            (entry.SpecId != 0 && entry.SpecId != specializationId) ||
-            entry.AECost != 0 || entry.TECost != 0 ||
-            entry.RequiredLevel > player->GetLevel() || !entry.SpellCount || GetSelectableFreeGroup(entry.EntryId))
-            return false;
-
-        auto const& dependencies = AscensionCompatData::CoAAutomaticDependencies;
-        auto dependency = std::lower_bound(dependencies.begin(), dependencies.end(), entry.EntryId,
-            [](AscensionCompatData::CoAAutomaticDependency const& value, uint32 id)
+        // The rule lives with the catalog-derived state, next to the per-slot derivation that shares it;
+        // this adapter answers its requirements from the live spellbook.
+        return AscensionCoATalentState::IsAutomaticEntryAvailable(entry, player->getClass(),
+            uint16(specializationId), player->GetLevel(),
+            [player](AscensionCompatData::CoATalentEntry const& required)
             {
-                return value.EntryId < id;
+                return std::any_of(required.SpellIds.begin(), required.SpellIds.end(),
+                    [player](uint32 spellId) { return spellId && player->HasSpell(spellId); });
             });
-        if (dependency == dependencies.end() || dependency->EntryId != entry.EntryId)
-            return true;
-
-        for (uint32 requiredId : dependency->RequiredEntryIds)
-        {
-            if (!requiredId)
-                continue;
-
-            auto const& entries = AscensionCompatData::CoATalentEntries;
-            auto required = std::lower_bound(entries.begin(), entries.end(), requiredId,
-                [](AscensionCompatData::CoATalentEntry const& value, uint32 id)
-                {
-                    return value.EntryId < id;
-                });
-            if (required == entries.end() || required->EntryId != requiredId ||
-                required->ClassId != player->getClass() ||
-                !std::any_of(required->SpellIds.begin(), required->SpellIds.end(),
-                    [player](uint32 spellId) { return spellId && player->HasSpell(spellId); }))
-                return false;
-        }
-        return true;
     }
 
     static void ReconcileRunemasterFists(Player* player, uint32 specializationId)
@@ -7336,6 +7321,22 @@ class spell_ascension_spec_swap : public SpellScript
                      GetSpellInfo()->Id, GetCaster() ? GetCaster()->GetName() : "<no caster>");
     }
 
+    /// The swap spells carry SPELL_EFFECT_TALENT_SPEC_SELECT (effect slot two, base points slot - 1) in
+    /// the installed Spell.dbc. Its default handler runs Player::ActivateSpec(slot - 1) in the hit-target
+    /// phase, before AfterCast: it moved the core specialization, action bars and glyphs before the
+    /// outgoing build was written down, and from slot three on a two-spec character the index passed
+    /// ActivateSpec's `spec > GetSpecsCount()` guard and reached the two-element glyph array out of
+    /// bounds. On a custom class the cast is only a marker and the switch happens in AfterCast, so the
+    /// default effect is suppressed; every other caster keeps the native behavior.
+    void HandleEffectHitTarget(SpellEffIndex effIndex)
+    {
+        if (!IsSwapSpell())
+            return;
+        if (Player* player = GetHitPlayer())
+            if (IsAscensionCustomClass(player))
+                PreventHitDefaultEffect(effIndex);
+    }
+
     void HandleAfterCast()
     {
         Player* player = GetCaster() ? GetCaster()->ToPlayer() : nullptr;
@@ -7358,6 +7359,8 @@ class spell_ascension_spec_swap : public SpellScript
     {
         OnCheckCast += SpellCheckCastFn(spell_ascension_spec_swap::HandleCheckCast);
         BeforeCast += SpellCastFn(spell_ascension_spec_swap::HandleBeforeCast);
+        OnEffectHitTarget += SpellEffectFn(spell_ascension_spec_swap::HandleEffectHitTarget, EFFECT_ALL,
+                                           SPELL_EFFECT_TALENT_SPEC_SELECT);
         AfterCast += SpellCastFn(spell_ascension_spec_swap::HandleAfterCast);
     }
 };
