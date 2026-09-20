@@ -238,7 +238,11 @@ std::vector<CoAConfigScalar> CoAConfigBools = {
     { "CONFIG_NIGHTMARE_ENABLE", 0u },
     { "CONFIG_BUILD_DRAFT_ENABLED", 1u },
     { "CONFIG_CRUSADER_ENABLED", 1u },
-    { "CONFIG_CHALLENGE_ENABLED", 1u },
+    // CONFIG_CHALLENGE_ENABLED and CONFIG_CHALLENGE_CREATOR_ENABLED are owned by
+    // mod-coa-challenges, which sends them over the same opcode from its own conf
+    // (CoA.Challenges.Config.cpp, SendConfigBatch). Two writers of one key means the
+    // delivery order decides what the client holds, and the captured value would
+    // silently override this realm's configuration. Left to that module.
     { "CONFIG_IRONMAN_HIDDEN", 1u },
     { "CONFIG_SURVIALIST_HIDDEN", 1u },
     { "CONFIG_DRAFT_HIDDEN", 0u },
@@ -249,7 +253,6 @@ std::vector<CoAConfigScalar> CoAConfigBools = {
     { "CONFIG_BUILD_DRAFT_HIDDEN", 0u },
     { "CONFIG_CRUSADER_HIDDEN", 0u },
     { "CONFIG_CHARACTER_ADVANCEMENT_TRAITS_ENABLED", 0u },
-    { "CONFIG_CHALLENGE_CREATOR_ENABLED", 0u },
     { "CONFIG_ENABLE_FULL_DRAFT_MODE", 0u },
     { "CONFIG_RECOVERY_DISENCHANTED_ITEM_ENABLED", 1u },
     { "CONFIG_RECOVERY_DELETED_CHARACTER_ENABLED", 1u },
