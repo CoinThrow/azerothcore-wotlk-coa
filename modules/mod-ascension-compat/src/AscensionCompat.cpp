@@ -373,6 +373,8 @@ enum class AscensionCompatConfig {
   MAX_RIDING_FROM_START,
   LEVEL_SCALING,
   QUEST_LEVEL_SCALING,
+  LOCAL_TALENT_BRIDGE,
+  SPEC_SWAP_SELF_INSPECT,
 
   NUM_CONFIGS,
 };
@@ -412,10 +414,27 @@ public:
                          "AscensionCompat.LevelScaling", true);
     SetConfigValue<bool>(AscensionCompatConfig::QUEST_LEVEL_SCALING,
                          "AscensionCompat.QuestLevelScaling", true);
+    SetConfigValue<bool>(AscensionCompatConfig::LOCAL_TALENT_BRIDGE,
+                         "AscensionCompat.LocalTalentBridge.Enable", true);
+    SetConfigValue<bool>(AscensionCompatConfig::SPEC_SWAP_SELF_INSPECT,
+                         "AscensionCompat.SpecSwap.SendSelfInspect", false);
   }
 };
 
 AscensionCompatConfigData ascensionCompatConfig;
+
+// The ASC_LOCAL_CAD whisper and the three-message ASC_LOCAL_SPEC / _RECORDS / _TALENTS form
+// (#4027, folded in from #4030 and #4031) exist for one reader: the Character Advancement layer
+// shipped in patch-B, which overrides the native API and rebuilds ranks from the spellbook. They
+// carry nothing the native packets cannot -- 0x0726 carries the full set with its ranks, and the
+// slot 0x0725 carries is the specialization id the client itself reports, GetActiveSpecID being
+// the stored slot plus one (Extensions.dll 0x00176400) and SPEC_SWAP_SPELLS being indexed by it.
+// So they retire with the client patch that stops overriding, not before: on by default, and a
+// realm whose client defers to the native packets turns them off.
+inline bool LocalTalentBridgeEnabled()
+{
+  return ascensionCompatConfig.GetConfigValue<bool>(AscensionCompatConfig::LOCAL_TALENT_BRIDGE);
+}
 
 struct AppearanceInfo {
   uint32 SourceItem = 0;
@@ -1311,8 +1330,11 @@ public:
     SendCoAConfigs(player);
     SendChrClassRoles(player);
     SendCharacterAdvancementState(player);
-    SendCharacterAdvancementBridge(player);
-    SendLocalTalentState(player);
+    if (LocalTalentBridgeEnabled())
+    {
+        SendCharacterAdvancementBridge(player);
+        SendLocalTalentState(player);
+    }
 
     // Taught abilities (e.g. Eternal Curse 800157, AscensionTaughtAbilityData.h)
     // are temporary spells and are never saved to character_spell, so
@@ -1567,8 +1589,11 @@ public:
   /// OnPlayerLogin in every ordinary session), whose container the known-entries handler needs.
   void SendCharacterAdvancementKnownEntries(Player* player)
   {
-    SendCharacterAdvancementBridge(player);
-    SendLocalTalentState(player);
+    if (LocalTalentBridgeEnabled())
+    {
+      SendCharacterAdvancementBridge(player);
+      SendLocalTalentState(player);
+    }
     {
       std::lock_guard<std::mutex> lock(_stateLock);
       if (!_advancementSent.count(player->GetGUID().GetCounter()))
@@ -2454,10 +2479,24 @@ public:
     uint32 const granted = SynchronizeProgression(player);
 
     SendCharacterAdvancementState(player);
-    // The active-spec and known-entries packets move the client's per-slot state, but only the
-    // inspection answer rebuilds the working build the talent trees read; without it they stay on the
-    // slot that was left until the next login or reload.
-    SendCharacterAdvancementInspectResult(player, player);
+    // The active-spec and known-entries packets move the client's per-slot state. The trees were
+    // observed to keep showing the slot that was left until a reload, and sending the character its
+    // own inspection answer cleared that -- but 0x06E2 is the answer to a request, and the client
+    // dispatches it as the shared INSPECT_CHARACTER_ADVANCEMENT_RESULT event whether or not anything
+    // asked. Forged unsolicited on the lab client, the event fires with no inspection in flight
+    // (coa-protocol-atlas, tools/replay/pr4128_claims.py --check inspect). Its consumers all read it
+    // as the answer to an inspection they started: LibTalentQuery-1.0 decrements lastInspectPending
+    // (LibTalentQuery-1.0.lua:292) and gates TalentQuery_Ready on that counter reaching zero (:294),
+    // so a player-initiated inspection racing a specialization switch is dropped until the library's
+    // timeout; an open InspectBuildPanel re-reads GetInspectInfo on its own unit
+    // (InspectBuildPanel.lua:52).
+    //
+    // Kept as an opt-in workaround rather than the default: it buys a refresh at the cost of
+    // corrupting a shared client-side queue, and the packet the live realm actually sends after a
+    // native specialization switch is not known. Whoever has the capture should look there and
+    // replace this.
+    if (ascensionCompatConfig.GetConfigValue<bool>(AscensionCompatConfig::SPEC_SWAP_SELF_INSPECT))
+      SendCharacterAdvancementInspectResult(player, player);
 
     LOG_INFO("module.ascension_compat",
              "Switched {} (class {}) from spec slot {} to {} (specialization {}): removed {} spell(s), "

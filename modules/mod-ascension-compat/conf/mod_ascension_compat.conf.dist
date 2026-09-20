@@ -86,3 +86,36 @@ AscensionCompat.LastExtensionOpcode = 2515
 # Startup-only: solo levels 10-59, three scenes, depths 1-15. Realm level cap is unchanged.
 # Enable only with the reviewed installation package; native gameplay acceptance is still required.
 Ascension.Manastorm.Enable = 0
+
+# Realm name sent in SMSG 0x09BC with the character list. This core never calls
+# World::SetRealmName, so World::GetRealmName() is empty and this option is what
+# the client caches on its realm object.
+AscensionCompat.RealmName = ""
+
+# The four realm-type predicates the same packet carries, one byte each, read by
+# C_Realm.IsLive / IsLeague / IsPTR / IsDevelopment (realm object +0x40, +0x42,
+# +0x43, +0x44). They are how the client describes the realm to itself, not
+# feature switches: none of them affects the Character Advancement interface,
+# which is selected by CONFIG_LEGACY_CHARACTER_ADVANCEMENT_ENABLED instead.
+# IsLive in particular makes the client treat this realm as the official live
+# one, which changes where it exports talent builds, so it is off by default.
+# The create-screen byte (+0x46) is not configurable: without it the client
+# refuses every custom class, so it is always sent.
+AscensionCompat.Realm.IsLive = 0
+AscensionCompat.Realm.IsLeague = 0
+AscensionCompat.Realm.IsPTR = 0
+AscensionCompat.Realm.IsDevelopment = 0
+
+# The ASC_LOCAL_* addon-channel talent bridge (#4027). Only the Character
+# Advancement layer shipped in patch-B reads it; the native 0x0725/0x0726
+# packets carry the same state. Turn it off on a realm whose client patch no
+# longer overrides the native API, and leave it on otherwise.
+AscensionCompat.LocalTalentBridge.Enable = 1
+
+# After a specialization switch, also send the character its own SMSG 0x06E2
+# inspection answer. It refreshes the trees, but the client dispatches it as the
+# shared INSPECT_CHARACTER_ADVANCEMENT_RESULT event, which LibTalentQuery and an
+# open inspect panel read as the answer to an inspection they started: enabling
+# this can drop a player-initiated inspection. Opt-in workaround until the
+# packet the live realm sends after a native switch is identified.
+AscensionCompat.SpecSwap.SendSelfInspect = 0
