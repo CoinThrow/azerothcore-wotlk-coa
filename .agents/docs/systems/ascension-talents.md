@@ -62,6 +62,10 @@ Opcodes and layouts come from the community measurements in `hertigservices/Asce
   struct; `IsKnownID`'s query (`0x10151480`) needs the node at `[obj+0x230]` to carry `[+0x10]==1` and a
   rank at `[+0x14]` that is neither 0 nor `0x2c`. The initial 0x0725 and the set go out from `OnPlayerLogin`,
   and the set again after every `.localtalent`, `.localtalent reset`, `.localspec` and level change.
+  One packet carries the whole set: forged with two records and read in a single snapshot, both are known
+  at once (coa-protocol-atlas `tools/replay/pr4128_claims.py --check set`, lab run 2026-09-20). The live
+  capture's growing 1..N series is therefore a sequence of complete sets, not a protocol requirement, and
+  the server sends the complete set once.
 - `CMSG 0x0727` known-entries upload: same records, the client's complete wanted set after a native learn or
   unlearn (an unlearn is a smaller set, never a delta). It arrives on the network thread
   (`CanPacketReceiveEarly`), so it is queued by account and applied on the player's own update.
@@ -86,6 +90,23 @@ Opcodes and layouts come from the community measurements in `hertigservices/Asce
   `.localtalent reset`, and reports the active spec's four values at `OnPlayerLogin` and with every
   known-entries resend — a specialization switch therefore shows that spec's own costs. Ability unlearn/reset
   stay at their stored per-spec value until an ability-unlearn flow exists.
+- `SMSG 0x06E2` inspect answer, sent to the character itself after a specialization switch: it does refresh
+  the trees, but the client dispatches it as the shared `INSPECT_CHARACTER_ADVANCEMENT_RESULT` event whether
+  or not anything asked for it — forged unsolicited on the lab client, the event fires with no inspection in
+  flight (coa-protocol-atlas `tools/replay/pr4128_claims.py --check inspect`, lab run 2026-09-20). Its
+  consumers read it as the answer to an inspection they started: `LibTalentQuery-1.0` decrements
+  `lastInspectPending` (`:292`) and gates `TalentQuery_Ready` on that counter reaching zero (`:294`), so a
+  player-initiated inspection racing a switch is dropped until the library times out. Kept behind
+  `AscensionCompat.SpecSwap.SendSelfInspect` (default off) until the packet the live realm actually sends
+  after a native switch is identified in the capture.
+- The realm cluster at character select (`SMSG 0x09D0` / `0x09BC` / `0x06E5`) does **not** gate this system.
+  The eight bytes at realm-object `+0x40..+0x47` are `IsLive`, `IsLeague`, `IsPTR`, `IsDevelopment` and the
+  `CanCreateCoA` / `CanCreateClass` pair; with the block zeroed and with it set, `GetActiveSpecID`,
+  `IsKnownID` and `MustUseLegacyAPI` read the same (lab run 2026-09-20). What selects the Character
+  Advancement interface is `CONFIG_LEGACY_CHARACTER_ADVANCEMENT_ENABLED` in `SMSG_COA_CONFIG`
+  (`UIParent.lua:338`, `CharacterAdvancementUtil.lua:799`). `+0x46` is still required — without it the create
+  screen refuses every custom class — and `IsLive` is left off by default because a client that believes it
+  is on the live realm exports talent builds to the live builder URL.
 - Timing: the state goes out from `OnPlayerLogin`, inside the login burst, the way the live realm sends it.
   The live capture shows the block right after `CMSG_PLAYER_LOGIN`, before the
   local player object and before the client's first `CMSG_SET_ACTIVE_MOVER`; the wait for that mover was the
@@ -97,6 +118,11 @@ Opcodes and layouts come from the community measurements in `hertigservices/Asce
   one-based chunk index, total repeated in every chunk; an empty set is one chunk with an empty payload. It
   carries what the native packets cannot: the `ChrSpecs` id. The patch-B `FrameXML/LocalCharacterAdvancementBridge.lua`
   consumes it and the compat layer trusts it over its SavedVariable and spellbook reconstruction.
+  That `ChrSpecs` id is the shim's own notion, not the client's: natively
+  `C_CharacterAdvancement.GetActiveSpecID` returns the stored slot plus one (`Extensions.dll` `0x00176400`)
+  and `SPEC_SWAP_SPELLS` is indexed by that number, so 0x0725 already carries the identifier the untouched
+  client uses. Both bridges therefore exist for the patch-B layer alone and retire with it, which is what
+  `AscensionCompat.LocalTalentBridge.Enable` (default on) is for.
 - Three-message form (from #4031, read by its client half): `ASC_LOCAL_SPEC<TAB><specId>`,
   `ASC_LOCAL_RECORDS<TAB>1 1` (the server always holds a record; an empty list is an empty tree) and one
   `ASC_LOCAL_TALENTS<TAB><entry:rank entry:rank ...>` with the paid and free-choice ranks only, adopted whole
