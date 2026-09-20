@@ -39,9 +39,11 @@ namespace
 
     // Realm-info cluster that the live server sends around the character list
     // (verified against the 2026-09 live capture, wire order):
-    //   SMSG 0x09D0 (4 zero bytes) — flushes the client's pending selection
-    //                                state; registered unconditionally by
-    //                                Extensions.dll.
+    //   SMSG 0x09D0 (4 zero bytes) — SMSG_CHARACTER_CUSTOMIZATION_UNLOCKS.
+    //                                Extensions.dll's handler (0x1032E300,
+    //                                registered unconditionally) ignores the
+    //                                payload and clears the client's stored
+    //                                customization-unlock container.
     //   SMSG 0x09BC (57 bytes)     — realm parameters. Extensions.dll's handler
     //                                (0x102FC6C0) parses this payload and copies
     //                                the eight feature-gate bytes into
@@ -54,7 +56,7 @@ namespace
     //   SMSG 0x06E5 (9 zero bytes) — the live server also sends its
     //                                chat-infraction notice here with the
     //                                "no pending infractions" defaults.
-    constexpr uint16 SMSG_ASCENSION_SELECTION_RESET = 0x09D0;
+    constexpr uint16 SMSG_ASCENSION_CHARACTER_CUSTOMIZATION_UNLOCKS = 0x09D0;
     constexpr uint16 SMSG_ASCENSION_REALM_INFO = 0x09BC;
     constexpr uint16 SMSG_ASCENSION_CHAT_INFRACTION_UPDATE = 0x06E5;
 
@@ -138,13 +140,13 @@ namespace
     // AscensionCoAConfigData payloads), the eight feature-gate bytes the client
     // copies into DLL+0xBDB178, the empty first string, the realm name (client
     // caches it at realm-object +0x4C), one byte and the trailing u32. The 0x09D0
-    // reset precedes the cluster and 0x06E5 carries the live "no pending chat
-    // infraction" defaults (empty name, zeroed fields).
+    // customization-unlocks packet precedes the cluster and 0x06E5 carries the live
+    // "no pending chat infraction" defaults (empty name, zeroed fields).
     void SendAscensionRealmInfo(WorldSession* session)
     {
-        WorldPacket reset(SMSG_ASCENSION_SELECTION_RESET, 4);
-        reset << uint32(0);
-        session->SendPacket(&reset);
+        WorldPacket unlocks(SMSG_ASCENSION_CHARACTER_CUSTOMIZATION_UNLOCKS, 4);
+        unlocks << uint32(0);
+        session->SendPacket(&unlocks);
 
         WorldPacket realm(SMSG_ASCENSION_REALM_INFO, 64);
         realm << uint32(20);        // live 0x14; client stores at realm-object +0x04
