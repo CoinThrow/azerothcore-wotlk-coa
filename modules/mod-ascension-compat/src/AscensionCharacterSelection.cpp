@@ -38,19 +38,17 @@ namespace
     constexpr uint16 SMSG_ASCENSION_CHARACTER_SELECTION_GAME_MODE = 0x0771;
 
     // Realm-info cluster that the live server sends around the character list
-    // (verified against the 2026-09 live capture, wire order):
-    //   SMSG 0x09D0 (4 zero bytes) — flushes the client's pending selection
-    //                                state; registered unconditionally by
+    // (wire order from the 2026-09 live capture):
+    //   SMSG 0x09D0 (4 zero bytes) — the client's handler clears its
+    //                                customization-unlock container and ignores
+    //                                the payload; registered unconditionally by
     //                                Extensions.dll.
     //   SMSG 0x09BC (57 bytes)     — realm parameters. Extensions.dll's handler
-    //                                (0x102FC6C0) parses this payload and copies
-    //                                the eight feature-gate bytes into
-    //                                DLL+0xBDB178..0xBDB17F, which is what lets
-    //                                the Character Advancement UI render trees at
-    //                                all; the realm name and rates land in the
-    //                                realm object at DLL+0xBDB138. Without this
-    //                                packet the custom feature set stays
-    //                                uninitialized.
+    //                                (0x102FC6C0) fills the realm object at
+    //                                DLL+0xBDB138 with the ids, rates and name,
+    //                                and the eight bytes at +0x40..+0x47 with the
+    //                                realm-type and create-screen predicates
+    //                                (see SendAscensionRealmInfo below).
     //   SMSG 0x06E5 (9 zero bytes) — the live server also sends its
     //                                chat-infraction notice here with the
     //                                "no pending infractions" defaults.
@@ -135,11 +133,33 @@ namespace
 
     // Realm parameters (SMSG 0x09BC), byte-for-byte the live layout: u32, u32,
     // five floats, u32 (realm rates and two auction values, matching the
-    // AscensionCoAConfigData payloads), the eight feature-gate bytes the client
-    // copies into DLL+0xBDB178, the empty first string, the realm name (client
-    // caches it at realm-object +0x4C), one byte and the trailing u32. The 0x09D0
-    // reset precedes the cluster and 0x06E5 carries the live "no pending chat
-    // infraction" defaults (empty name, zeroed fields).
+    // AscensionCoAConfigData payloads), the eight predicate bytes the client
+    // stores at realm-object +0x40..+0x47, the empty first string, the realm name
+    // (client caches it at realm-object +0x4C), one byte and the trailing u32 --
+    // which the handler reads only when bytes remain, so it must stay last. The
+    // 0x09D0 reset precedes the cluster and 0x06E5 carries the live "no pending
+    // chat infraction" defaults (empty name, zeroed fields).
+    //
+    // The eight bytes are not a feature-gate block. Each is read by one named
+    // client predicate, forged and read back on the lab client (coa-protocol-atlas
+    // fiche 0x09bc, tools/replay/pr4128_claims.py --check gates):
+    //
+    //   +0x40 C_Realm.IsLive          +0x44 C_Realm.IsDevelopment
+    //   +0x42 C_Realm.IsLeague        +0x46 / +0x47 C_CharacterCreate.CanCreateCoA
+    //   +0x43 C_Realm.IsPTR                         and CanCreateClass
+    //
+    // Only +0x46 matters to this module: with it clear, the create screen refuses
+    // every custom class (CanCreateClass checks it before the 12..32 class table,
+    // Extensions.dll 0x1018D5F0). None of the eight touches Character Advancement
+    // -- with the block zeroed and with it set, GetActiveSpecID, IsKnownID and
+    // MustUseLegacyAPI all read the same. What selects the CA interface is
+    // CONFIG_LEGACY_CHARACTER_ADVANCEMENT_ENABLED in SMSG_COA_CONFIG
+    // (UIParent.lua:338, CharacterAdvancementUtil.lua:799).
+    //
+    // So isLive is left off by default: it is what the live realm sends about
+    // itself, and a client that believes it is on live exports builds to the live
+    // builder URL (CharacterAdvancementUtil.GetBuildWebURL). A realm that wants
+    // the live banner can say so in the config.
     void SendAscensionRealmInfo(WorldSession* session)
     {
         WorldPacket reset(SMSG_ASCENSION_SELECTION_RESET, 4);
@@ -156,8 +176,17 @@ namespace
         realm << float(1.0f);
         realm << float(0.0833f);    // RATE_AUCTION_DEPOSIT_VANITY
         realm << uint32(200000);    // CONFIG_MAX_AUCTION_DEPOSIT_VANITY
-        uint8 const featureGates[8] = { 1, 0, 0, 0, 0, 0, 1, 0 };
-        realm.append(featureGates, 8);
+        uint8 const predicates[8] = {
+            uint8(sConfigMgr->GetOption<bool>("AscensionCompat.Realm.IsLive", false) ? 1 : 0),
+            0,
+            uint8(sConfigMgr->GetOption<bool>("AscensionCompat.Realm.IsLeague", false) ? 1 : 0),
+            uint8(sConfigMgr->GetOption<bool>("AscensionCompat.Realm.IsPTR", false) ? 1 : 0),
+            uint8(sConfigMgr->GetOption<bool>("AscensionCompat.Realm.IsDevelopment", false) ? 1 : 0),
+            0,
+            1,                      // CanCreateCoA / CanCreateClass: the custom classes
+            0
+        };
+        realm.append(predicates, 8);
         realm << std::string();     // first string is empty on live as well
         // Live sends the realm name here; this core never calls
         // World::SetRealmName, so the option provides it (empty = empty field).
