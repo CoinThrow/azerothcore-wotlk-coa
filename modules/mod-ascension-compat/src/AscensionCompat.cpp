@@ -1537,24 +1537,18 @@ public:
   /// The active specialization first: its handler builds the per-character container that the known-entries
   /// handler refuses to fill without. The wire slot is 0-based (the client reports it as the slot index plus
   /// one), while slots are counted from one everywhere else; the count is how many slots the character has.
-  /// Before the active-spec packet the live realm replays the known set cumulatively (the capture carries
-  /// growing sets of 1..N records), then the complete set once more after it; mirror that
-  /// because the client's editable build is grown by the replay, not rebuilt by the single complete set.
+  /// The live capture shows the known set replayed cumulatively before this packet -- growing sets of 1..N
+  /// records -- and that was mirrored here on the reading that the client's editable build is grown by the
+  /// replay rather than rebuilt by the single complete set. Measured on the lab client, it is not: one
+  /// 0x0726 carrying several records makes every one of them known in the same instant (coa-protocol-atlas,
+  /// tools/replay/pr4128_claims.py --check set, docs/lab-runs/2026-09-20-pr4128.md). A growing series is
+  /// not a delta protocol -- each packet is complete as of its moment -- so the prefix replay spent O(n^2)
+  /// bytes on a result the final complete set below already produces. Dropped.
   void SendCharacterAdvancementState(Player* player)
   {
     {
       std::lock_guard<std::mutex> lock(_stateLock);
       _advancementSent.insert(player->GetGUID().GetCounter());
-    }
-
-    std::vector<AscensionCoATalentState::KnownEntry> const known = KnownTalentEntries(player);
-    for (std::size_t count = 1; count <= known.size(); ++count)
-    {
-      std::vector<AscensionCoATalentState::KnownEntry> const prefix(known.begin(), known.begin() + count);
-      std::vector<uint8> const body = AscensionCoATalentState::KnownEntriesPayload(prefix);
-      WorldPacket replay(SMSG_CHARACTER_ADVANCEMENT_KNOWN_ENTRIES, body.size());
-      replay.append(body.data(), body.size());
-      player->GetSession()->SendPacket(&replay);
     }
 
     WorldPacket packet(SMSG_CHARACTER_ADVANCEMENT_ACTIVE_SPEC, sizeof(uint32) * 2);
