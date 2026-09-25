@@ -89,6 +89,7 @@
 #include "SpellMgr.h"
 #include "SpellScript.h"
 #include "Timer.h"
+#include "World.h"
 #include "WorldPacket.h"
 #include "WorldSession.h"
 
@@ -144,6 +145,11 @@ constexpr uint16 SMSG_CHARACTER_ADVANCEMENT_ACTIVE_SPEC = 0x0725;
 constexpr uint16 SMSG_CHARACTER_ADVANCEMENT_KNOWN_ENTRIES = 0x0726;
 constexpr uint16 CMSG_CHARACTER_ADVANCEMENT_KNOWN_ENTRIES = 0x0727;
 constexpr uint16 CMSG_MISSILE_FIRE_POSITION = 0x09C7;
+
+constexpr uint16 SMSG_PATCH_LOADING_SCREENS = 0x05F8;
+constexpr uint16 SMSG_PATCH_CREATURE_DISPLAY_INFO = 0x0976;
+constexpr uint32 CUSTOM_DISPLAY_ID_FALLBACK_MIN = 652000;
+constexpr uint32 DISPLAY_PATCH_FALLBACK_DELAY_MS = 5000;
 
 constexpr uint16 SMSG_PATCH_VANITY_COLLECTION = 0x0573;
 constexpr uint16 SMSG_UPDATE_OBJECT_ADDON = 0x0578;
@@ -353,6 +359,8 @@ enum class AscensionCompatConfig {
   LEVEL_SCALING,
   QUEST_LEVEL_SCALING,
   AUTO_PROGRESSION,
+  SEND_DISPLAY_PATCHES,
+  CLIENT_DBC_DIRECTORY,
 
   NUM_CONFIGS,
 };
@@ -398,6 +406,10 @@ public:
                          "CoA.QuestLevelScaling", true);
     SetConfigValue<bool>(AscensionCompatConfig::AUTO_PROGRESSION,
                          "CoA.AutoProgression", false);
+    SetConfigValue<bool>(AscensionCompatConfig::SEND_DISPLAY_PATCHES,
+                         "CoA.SendDisplayPatches", true);
+    SetConfigValue<std::string>(AscensionCompatConfig::CLIENT_DBC_DIRECTORY,
+                                "CoA.ClientDbcDirectory", "");
   }
 };
 
@@ -3084,6 +3096,197 @@ private:
 
 bool SendCollectionCreatureQueryResponse(WorldSession* session, uint32 creatureId);
 
+class AscensionDisplayPatchService {
+public:
+  static AscensionDisplayPatchService &Instance() {
+    static AscensionDisplayPatchService instance;
+    return instance;
+  }
+
+  void Initialize() {
+    if (!ascensionCompatConfig.GetConfigValue<bool>(
+            AscensionCompatConfig::SEND_DISPLAY_PATCHES))
+      return;
+
+    LOG_INFO("coa",
+             "Prepared {} CreatureDisplayInfo patch rows for the client stream",
+             GetDisplayPatchRows().size());
+  }
+
+  void OnPlayerLogin(Player *player) {
+    if (!ascensionCompatConfig.GetConfigValue<bool>(
+            AscensionCompatConfig::SEND_DISPLAY_PATCHES))
+      return;
+
+    uint32 const guid = player->GetGUID().GetCounter();
+    std::lock_guard lock(_mutex);
+    _streamedPlayers.erase(guid);
+    _fallbackTimers[guid] = DISPLAY_PATCH_FALLBACK_DELAY_MS;
+  }
+
+  void OnPlayerLogout(Player *player) {
+    uint32 const guid = player->GetGUID().GetCounter();
+    std::lock_guard lock(_mutex);
+    _streamedPlayers.erase(guid);
+    _fallbackTimers.erase(guid);
+  }
+
+  void OnPlayerUpdate(Player *player, uint32 diff) {
+    if (!ascensionCompatConfig.GetConfigValue<bool>(
+            AscensionCompatConfig::SEND_DISPLAY_PATCHES))
+      return;
+
+    uint32 const guid = player->GetGUID().GetCounter();
+    bool expired = false;
+    {
+      std::lock_guard lock(_mutex);
+      auto const itr = _fallbackTimers.find(guid);
+      if (itr != _fallbackTimers.end())
+      {
+        if (itr->second > diff)
+          itr->second -= diff;
+        else
+        {
+          _fallbackTimers.erase(itr);
+          expired = true;
+        }
+      }
+    }
+
+    if (expired)
+      SendPatchStream(player);
+  }
+
+  void SendPatchStream(Player *player) {
+    if (!ascensionCompatConfig.GetConfigValue<bool>(
+            AscensionCompatConfig::SEND_DISPLAY_PATCHES))
+      return;
+
+    uint32 const guid = player->GetGUID().GetCounter();
+    {
+      std::lock_guard lock(_mutex);
+      if (!_streamedPlayers.insert(guid).second)
+        return;
+      _fallbackTimers.erase(guid);
+    }
+
+    uint32 const startTime = getMSTime();
+    std::vector<uint32> const rows = GetDisplayPatchRows();
+
+    SendLoadingScreenRow(player);
+
+    uint32 sent = 0;
+    for (uint32 displayId : rows) {
+      if (CreatureDisplayInfoEntry const *entry =
+              sCreatureDisplayInfoStore.LookupEntry(displayId)) {
+        SendDisplayInfoRow(player, *entry);
+        ++sent;
+      }
+    }
+
+    LOG_INFO("coa", "Streamed {} CreatureDisplayInfo patch rows to {} in {} ms",
+             sent, player->GetName(), GetMSTimeDiffToNow(startTime));
+  }
+
+private:
+  void SendLoadingScreenRow(Player *player) const {
+    WorldPacket packet(SMSG_PATCH_LOADING_SCREENS, 24);
+    uint8 loadingScreenRow[16] = {};
+    packet.append(loadingScreenRow, sizeof(loadingScreenRow));
+    packet << uint32(0) << uint32(0);
+    player->GetSession()->SendPacket(&packet);
+  }
+
+  void SendDisplayInfoRow(Player *player,
+                          CreatureDisplayInfoEntry const &entry) const {
+    WorldPacket packet(SMSG_PATCH_CREATURE_DISPLAY_INFO, 80);
+
+    uint32 const soundId = 0;
+    uint8 displayRow[64] = {};
+    std::memcpy(displayRow + 0x00, &entry.Displayid, sizeof(uint32));
+    std::memcpy(displayRow + 0x04, &entry.ModelId, sizeof(uint32));
+    std::memcpy(displayRow + 0x08, &soundId, sizeof(uint32));
+    std::memcpy(displayRow + 0x0C, &entry.ExtendedDisplayInfoID, sizeof(uint32));
+    std::memcpy(displayRow + 0x10, &entry.scale, sizeof(float));
+    displayRow[0x14] = 255;
+
+    packet.append(displayRow, sizeof(displayRow));
+    for (uint8 stringIndex = 0; stringIndex < 4; ++stringIndex)
+      packet << uint32(0);
+
+    player->GetSession()->SendPacket(&packet);
+  }
+
+  std::vector<uint32> GetDisplayPatchRows() {
+    std::lock_guard lock(_cacheMutex);
+    if (!_rowsPrepared)
+    {
+      _rows = BuildDisplayPatchRows();
+      _rowsPrepared = true;
+    }
+    return _rows;
+  }
+
+  std::vector<uint32> BuildDisplayPatchRows() const {
+    std::filesystem::path clientDbcDirectory;
+    std::string const configuredDirectory(
+        ascensionCompatConfig.GetConfigValue<std::string>(
+            AscensionCompatConfig::CLIENT_DBC_DIRECTORY));
+    if (!configuredDirectory.empty())
+      clientDbcDirectory = configuredDirectory;
+    else
+      clientDbcDirectory =
+          std::filesystem::path(sWorld->GetDataPath()) / "dbc_clientset";
+
+    std::filesystem::path const clientDbc =
+        clientDbcDirectory / "CreatureDisplayInfo.dbc";
+    std::unordered_set<uint32> clientDisplayIds;
+    ClientDBC clientDisplays;
+    bool const haveClientSet = clientDisplays.Load(clientDbc.string(), 16);
+    if (haveClientSet)
+    {
+      for (uint32 row = 0; row < clientDisplays.GetRecordCount(); ++row)
+        clientDisplayIds.insert(clientDisplays.GetRecord(row).GetUInt32(0));
+    }
+    else
+    {
+      LOG_WARN("coa",
+               "Client DBC copy {} is unavailable; streaming every display id "
+               "at or above {} instead of the exact missing set",
+               clientDbc.generic_string(), CUSTOM_DISPLAY_ID_FALLBACK_MIN);
+    }
+
+    std::vector<uint32> rows;
+    for (uint32 displayId = 0;
+         displayId < sCreatureDisplayInfoStore.GetNumRows(); ++displayId) {
+      if (!sCreatureDisplayInfoStore.LookupEntry(displayId))
+        continue;
+
+      if (haveClientSet)
+      {
+        if (clientDisplayIds.contains(displayId))
+          continue;
+      }
+      else if (displayId < CUSTOM_DISPLAY_ID_FALLBACK_MIN)
+      {
+        continue;
+      }
+
+      rows.push_back(displayId);
+    }
+
+    return rows;
+  }
+
+  std::mutex _mutex;
+  std::unordered_set<uint32> _streamedPlayers;
+  std::unordered_map<uint32, uint32> _fallbackTimers;
+
+  std::mutex _cacheMutex;
+  bool _rowsPrepared = false;
+  std::vector<uint32> _rows;
+};
+
 class AscensionCollectionService {
 public:
     static bool IsCosmeticCategory(uint32 category)
@@ -4086,6 +4289,7 @@ private:
       case CMSG_EXTENSION_INITIALIZED:
         player->SendAllSpellChargeStates();
         SendAscensionRunemasterEchoesOwnership(player);
+        AscensionDisplayPatchService::Instance().SendPatchStream(player);
         LOG_DEBUG("coa", "Resent spell charge state to {} after client world entry",
                   player->GetName());
         break;
@@ -5560,6 +5764,7 @@ public:
       SynchronizeAscensionClassMechanics(player);
       AscensionResourceService::Instance().OnPlayerLogin(player);
       AscensionCollectionService::Instance().OnPlayerLogin(player);
+      AscensionDisplayPatchService::Instance().OnPlayerLogin(player);
       RefreshScaledQuestQueries(player);
       SendAverageItemLevel(player);
     }
@@ -5647,6 +5852,7 @@ public:
     AscensionClassService::Instance().OnPlayerLogout(player);
     AscensionResourceService::Instance().OnPlayerLogout(player);
     AscensionCollectionService::Instance().OnPlayerLogout(player);
+    AscensionDisplayPatchService::Instance().OnPlayerLogout(player);
   }
 
   void OnPlayerUpdate(Player *player, uint32 diff) override {
@@ -5656,6 +5862,7 @@ public:
       AscensionClassService::Instance().UpdateClassTuning(player, diff);
       AscensionResourceService::Instance().OnPlayerUpdate(player, diff);
       AscensionCollectionService::Instance().OnPlayerUpdate(player, diff);
+      AscensionDisplayPatchService::Instance().OnPlayerUpdate(player, diff);
       EquipNewItems(player);
       if (sAscensionPresets->GetActivePresetOverride(player->GetGUID()))
       {
@@ -6206,6 +6413,7 @@ public:
         AscensionCompatConfig::LAST_EXTENSION_OPCODE);
     bool dataLoaded =
         AscensionCollectionService::Instance().LoadClientData();
+    AscensionDisplayPatchService::Instance().Initialize();
     AscensionResourceService::Instance().ValidateDefinitions();
     LOG_INFO("coa",
              "Ascension compatibility enabled; consuming extension opcodes "
