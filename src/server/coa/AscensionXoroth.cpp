@@ -182,7 +182,10 @@ void Refresh(Player* player)
         if (aura && aura->GetEffect(EFFECT_0) && aura->GetEffect(EFFECT_0)->GetAmount() != value)
             aura->GetEffect(EFFECT_0)->ChangeAmount(value);
     };
-    scale(302546, player->GetAuraOfRankedSpell(706569) ? imps * Amount(302546) : 0);
+    int32 blockPerImp = player->HasAura(707836)                ? Amount(302546, 1)
+                        : player->GetAuraOfRankedSpell(706569) ? Amount(302546)
+                                                               : 0;
+    scale(302546, int32(imps) * blockPerImp);
     scale(302573, player->HasAura(804340) ? imps * Amount(302573) : 0);
     scale(302574, player->HasAura(804340) ? -int32(imps) * Amount(302574) : 0);
     scale(302592, imps);
@@ -197,11 +200,9 @@ void Refresh(Player* player)
         effect->ChangeAmount(Count(player, 500906));
 
     scale(573075, player->HasAura(573035) ? player->GetUInt32Value(PLAYER_FIELD_COMBAT_RATING_1 + CR_BLOCK) / 2 : 0);
-    for (auto const& replacement : {std::array<uint32, 3>{301302, 801016, 804353},
-                                    {800710, 500904, 520005},
+    for (auto const& replacement : {std::array<uint32, 3>{800710, 500904, 520005},
                                     {570727, 801059, 802581},
-                                    {807587, 801059, 520292},
-                                    {706755, 804883, 707666}})
+                                    {807587, 801059, 520292}})
     {
         uint32 talent = replacement[0];
         if (talent == 570727 && player->HasAura(807587))
