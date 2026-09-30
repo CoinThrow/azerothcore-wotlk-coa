@@ -2965,14 +2965,10 @@ VALUES
 --   * 1660055 The Maid I Left Behind starts at Bianca Spada 161700 - the quest text is Bianca
 --     speaking about her maid Dulcinea ("I left one of my maids in Goldshire", "my brother");
 --     the backup had Moroi as the starter
---   * 1660056 Agria's Medicine and 1660057 Seven Years of Bad Luck have NO creature starter
---     (2026-09-29): Moroi was their starter; both were removed and will go to a new
---     NPC that does not exist yet. The starter DELETE below still covers both ids, so a
---     re-import removes a lingering row; nothing re-inserts one.
---   * 1660055/1660056/1660057 have NO ender either (2026-09-29): Moroi ended all three in the
---     backup; the rows were removed - their enders belong to a new NPC that does
---     not exist yet. The ender DELETE below still covers the three ids, so a re-import removes
---     a lingering row; nothing re-inserts one.
+--   * the Goldshire continuation 1660055-1660060 is re-wired at the END of this file to the
+--     full Spada cast (Dulcinea, Aldia Crayon, Clara the Mad, the mayor, Aliscar Lend and
+--     Eldor Hammer). The lists below stay as they are so the Northshire rows keep their
+--     idempotent cleanup; the block at the end is the last writer for the six quests.
 --
 -- Idempotent: removes only this family's rows, then re-inserts them.
 
@@ -4897,3 +4893,39 @@ INSERT INTO `gameobject`
    `animprogress`, `state`) VALUES
   (@OGUID, 2300520, 0, 1, 1, -8575.740000, -253.084000, 53.722800, 2.895400, 0.000000000,
    0.000000000, 0.992431000, 0.122801000, 120, 100, 1);
+
+-- ----------------------------------------------------------------------------
+-- Spada questline: the Goldshire continuation 1660055-1660060, wired from the realm's own
+-- ported content. The six quests and every supporting asset (texts, vendors, item hand-ins,
+-- gossip, crops, warren, mirror shards) already exist in the world; only the starter/ender
+-- set was missing, so the storyline stopped at Northshire. This block is the last writer:
+--   starters  Dulcinea 162800 (1660056), Aldia Crayon 162802 (1660057), Clara the Mad 162805
+--             (1660058), the mayor Harvend Thorm 162807 (1660059), Aliscar Lend 162806
+--             (1660060); Bianca Spada 161700 keeps 1660055
+--   enders    Dulcinea 162800 (1660055), Aldia Crayon 162802 (1660056 + 1660057), Clara the
+--             Mad 162805 (1660058), Eldor Hammer 162801 (1660059), Aliscar Lend 162806 (1660060)
+--   chain     1660057 follows 1660056; 1660055 offers 1660056 as its breadcrumb
+-- ----------------------------------------------------------------------------
+
+DELETE FROM `creature_queststarter` WHERE `quest` IN (1660055, 1660056, 1660057, 1660058, 1660059, 1660060);
+
+INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
+(161700, 1660055),
+(162800, 1660056),
+(162802, 1660057),
+(162805, 1660058),
+(162807, 1660059),
+(162806, 1660060);
+
+DELETE FROM `creature_questender` WHERE `quest` IN (1660055, 1660056, 1660057, 1660058, 1660059, 1660060);
+
+INSERT INTO `creature_questender` (`id`, `quest`) VALUES
+(162800, 1660055),
+(162802, 1660056),
+(162802, 1660057),
+(162805, 1660058),
+(162801, 1660059),
+(162806, 1660060);
+
+UPDATE `quest_template_addon` SET `BreadcrumbForQuestId` = 1660056 WHERE `ID` = 1660055;
+UPDATE `quest_template_addon` SET `PrevQuestID` = 1660056 WHERE `ID` = 1660057;
