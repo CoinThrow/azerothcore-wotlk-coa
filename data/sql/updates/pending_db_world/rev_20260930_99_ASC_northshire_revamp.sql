@@ -5073,3 +5073,53 @@ INSERT INTO `gameobject`
    `animprogress`, `state`) VALUES
   (@OGUID, 2300546, 0, 1, 1, -9275.855469, 455.861328, 82.248207, 4.409257, 0.000000000,
    0.000000000, -0.805763848, 0.592236963, 60, 100, 1);
+
+-- ---------------------------------------------------------------------------
+-- Kobold Warren & Mirror Shard, final: pure SAI on the data10 cast
+-- ---------------------------------------------------------------------------
+-- Both objects go back to the template's own cast - data10 = 'Destroy' 267031 /
+-- 'Inspecting' 256702, the native 3 second records - with 'SmartGameObjectAI' as
+-- the script. The core casts a goober spell that asks for a gameobject target at
+-- the object itself, so the native DUMMY lands on the object and its AI receives
+-- the spell hit (SMART_EVENT_SPELLHIT, 8). The hit exists only when the cast
+-- completes: an interrupted cast applies no effect, fires no event and changes
+-- nothing. data1 is the goober quest gate - the click casts nothing while the
+-- quest is not in progress - and the smart-event conditions repeat that gate for
+-- the credit/ambush/despawn rows, exactly like the replaced handler did.
+--
+-- The ambusher spawns ON the object (target self) and attacks the clicker:
+-- summon type 4 = timed despawn out of combat for 30 s, attackInvoker 2 attacks
+-- the event invoker, i.e. the spell's caster. The object despawns on the spot
+-- and is back in 60 s. The replaced C++ handler and its spell bindings come off;
+-- no gameobject or spell may still name them (worldserver would log the missing
+-- scripts at startup).
+
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `Data1` = 1660058, `Data10` = 267031 WHERE `entry` = 2300579;
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `Data1` = 1660057, `Data10` = 256702 WHERE `entry` = 2300546;
+
+DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_coa_abbess_relic_prayer';
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` IN (2300579, 2300546) AND `source_type` = 1;
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(2300579, 1, 0, 0, 8, 0, 100, 0, 267031, 0, 0, 0, 0, 0, 33, 162940, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - Destroy completed: credit 162940'),
+(2300579, 1, 1, 0, 8, 0, 75, 0, 267031, 0, 0, 0, 0, 0, 12, 162915, 4, 30000, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - Destroy completed: 75% Kobold Prospector ambush at the warren'),
+(2300579, 1, 2, 0, 8, 0, 100, 0, 267031, 0, 0, 0, 0, 0, 41, 0, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - destroyed, back in 60 s'),
+(2300546, 1, 0, 0, 8, 0, 100, 0, 256702, 0, 0, 0, 0, 0, 33, 162920, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - Inspecting completed: credit 162920'),
+(2300546, 1, 1, 0, 8, 0, 100, 0, 256702, 0, 0, 0, 0, 0, 12, 162919, 4, 30000, 2, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - Inspecting completed: Curse Shard at the shard'),
+(2300546, 1, 2, 0, 8, 0, 100, 0, 256702, 0, 0, 0, 0, 0, 41, 0, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - inspected, back in 60 s');
+
+-- Smart-event conditions key on the entryorguid and the row id + 1.
+
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` IN (2300579, 2300546) AND `SourceId` = 1;
+
+INSERT INTO `conditions`
+(`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
+VALUES
+(22, 1, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - credit only while quest 1660058 is in progress'),
+(22, 2, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - ambush only while quest 1660058 is in progress'),
+(22, 3, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - despawn only while quest 1660058 is in progress'),
+(22, 1, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - credit only while quest 1660057 is in progress'),
+(22, 2, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - ambush only while quest 1660057 is in progress'),
+(22, 3, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - despawn only while quest 1660057 is in progress');
