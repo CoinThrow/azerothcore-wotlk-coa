@@ -2747,25 +2747,31 @@ UPDATE `creature_template` SET `HoverHeight` = 0 WHERE `entry` = 161702;
 
 -- 1. creature_template rows -----------------------------------------------------------------
 
--- 161904: the shield guardians 161713 summons (three per phase).
+-- 161904: the shield guardians 161713 summons (three per phase). type, unit_flags and
+-- flags_extra are pinned to the values the encounter was authored with: the realm's port
+-- of this content ships type 7 and flags_extra 64 on the row.
 INSERT INTO `creature_template`
-  (`entry`, `name`, `minlevel`, `maxlevel`)
+  (`entry`, `name`, `minlevel`, `maxlevel`, `type`, `unit_flags`, `flags_extra`)
 VALUES
-  (161904, 'Wayward Theologian', 5, 5)
+  (161904, 'Wayward Theologian', 5, 5, 0, 0, 0)
 ON DUPLICATE KEY UPDATE
-  `name` = VALUES(`name`), `minlevel` = VALUES(`minlevel`), `maxlevel` = VALUES(`maxlevel`);
+  `name` = VALUES(`name`), `minlevel` = VALUES(`minlevel`), `maxlevel` = VALUES(`maxlevel`),
+  `type` = VALUES(`type`), `unit_flags` = VALUES(`unit_flags`), `flags_extra` = VALUES(`flags_extra`);
 
 -- 161908/161909: the portal units. Display 11686 is CreatureDisplayInfo 11686 ->
 -- model 1731 Creature\InvisibleStalker\InvisibleStalker.mdx (invisible); type 9 is the
--- live value and the "Interact" icon name comes from the live creature cache.
+-- live value and the "Interact" icon name comes from the live creature cache. unit_flags
+-- and flags_extra are pinned clear: without that the realm's port leaves the portals
+-- NOT_SELECTABLE (unit_flags 33555202) and they can never be clicked for the teleport.
 INSERT INTO `creature_template`
-  (`entry`, `name`, `minlevel`, `maxlevel`, `faction`, `IconName`, `type`)
+  (`entry`, `name`, `minlevel`, `maxlevel`, `faction`, `IconName`, `type`, `unit_flags`, `flags_extra`)
 VALUES
-  (161908, 'Wayward Theologian', 5, 5, 35, 'Interact', 9),
-  (161909, 'Wayward Theologian', 5, 5, 35, 'Interact', 9)
+  (161908, 'Wayward Theologian', 5, 5, 35, 'Interact', 9, 0, 0),
+  (161909, 'Wayward Theologian', 5, 5, 35, 'Interact', 9, 0, 0)
 ON DUPLICATE KEY UPDATE
   `name` = VALUES(`name`), `minlevel` = VALUES(`minlevel`), `maxlevel` = VALUES(`maxlevel`),
-  `faction` = VALUES(`faction`), `IconName` = VALUES(`IconName`), `type` = VALUES(`type`);
+  `faction` = VALUES(`faction`), `IconName` = VALUES(`IconName`), `type` = VALUES(`type`),
+  `unit_flags` = VALUES(`unit_flags`), `flags_extra` = VALUES(`flags_extra`);
 
 -- 2. creature_template values ---------------------------------------------------------------
 
