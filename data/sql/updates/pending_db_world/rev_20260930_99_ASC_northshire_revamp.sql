@@ -3789,24 +3789,34 @@ DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 30 AND `SourceGroup` 
 -- The realm's port bound the same prayer mechanic to two more places. Our data owns
 -- these spells now, so unbind the replaced handler (it despawns the object it is cast at
 -- and is cast at a relic by the port's gameobject script) and give 2300579 'Kobold
--- Warren' (quest 1660058) a plain click credit plus its ambush - its click must NOT
--- cast the Staff prayer 256726, whose credit belongs to a sisterhood relic. The client
--- also arrives with a second, report-use packet for a quest object and the port's handler
--- was reached by both; the rows answer the plain use only (event_param1 = 1) and the
--- conditions below keep them to an in-progress 1660058, as the replaced handler did.
+-- Warren' (quest 1660058) the realm's own 'Destroy' click: Data10 runs the 3 second
+-- cast (267031, the native client record) and the spell's override credits 162940 when
+-- it lands - its click must NOT cast the Staff prayer 256726, whose credit belongs to a
+-- sisterhood relic. The client also arrives with a second, report-use packet for a quest
+-- object and the port's handler was reached by both; the rows answer the plain use only
+-- (event_param1 = 1) and the conditions below keep them to an in-progress 1660058, as
+-- the replaced handler did. A three second timer armed by the click delivers the ambush
+-- and the despawn, both at the warren.
 
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_coa_abbess_relic_prayer';
 
-UPDATE `gameobject_template` SET `ScriptName` = '', `AIName` = 'SmartGameObjectAI' WHERE `entry` = 2300579;
+UPDATE `gameobject_template` SET `ScriptName` = '', `AIName` = 'SmartGameObjectAI', `Data10` = 267031 WHERE `entry` = 2300579;
+
+DELETE FROM `spell_dbc` WHERE `Id` = 267031;
+
+INSERT INTO `spell_dbc`
+(`Id`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
+VALUES
+(267031, 4, 14, 47, 101, 2, -1, 134, 1, 1, 162940, 1, 1, 1, 280101, 6008, 1, 16712190, 16712190, 16712190, 16712190);
 
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 2300579 AND `source_type` = 1;
 
 INSERT INTO `smart_scripts`
 (`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
 VALUES
-(2300579, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 33, 162940, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - [KC] Kobold Warren Destroyed'),
-(2300579, 1, 1, 0, 64, 0, 75, 0, 1, 0, 0, 0, 0, 0, 12, 162915, 4, 30000, 1, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - 75% Kobold Prospector ambush'),
-(2300579, 1, 2, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 41, 0, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - destroyed, back in 60 s');
+(2300579, 1, 0, 1, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 67, 1, 3000, 3000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - clicked: arm the destroy timer'),
+(2300579, 1, 1, 0, 61, 0, 100, 0, 1, 0, 0, 0, 0, 0, 41, 3500, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - destroyed: despawn as the cast ends'),
+(2300579, 1, 2, 0, 59, 0, 75, 0, 1, 0, 0, 0, 0, 0, 12, 162915, 4, 30000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - 75% Kobold Prospector ambush at the warren');
 
 -- Smart-event conditions key on the entryorguid and the row id + 1.
 
@@ -3815,9 +3825,24 @@ DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` 
 INSERT INTO `conditions`
 (`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
 VALUES
-(22, 1, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - credit only while quest 1660058 is in progress'),
+(22, 1, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - arm the destroy timer only while quest 1660058 is in progress'),
 (22, 2, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - ambush only while quest 1660058 is in progress'),
 (22, 3, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - despawn only while quest 1660058 is in progress');
+
+-- The Kobold Prospector is summoned by the timer without an attack order (the summon
+-- action attacks the spawn position, which here is the warren), so it engages through
+-- its own script.
+
+INSERT INTO `creature_template` (`entry`, `name`, `AIName`)
+VALUES (162915, 'Kobold Prospector', 'SmartAI')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `AIName` = VALUES(`AIName`);
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 162915 AND `source_type` = 0;
+
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(162915, 0, 0, 0, 54, 0, 100, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 21, 100, 0, 0, 0, 0, 0, 0, 0, 'Kobold Prospector - On Just Summoned - Attack the closest player');
 
 -- ##########################################################################################
 
