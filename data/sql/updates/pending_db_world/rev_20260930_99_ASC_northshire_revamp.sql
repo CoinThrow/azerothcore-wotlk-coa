@@ -3752,18 +3752,14 @@ SET @OGUID  := 7500128;
 --   * Kill credits: 256701 Journal -> 161715, 256726 Staff -> 161824, 256728 Idol ->
 --     161825, 365036 Jewel -> 161826 (the invisible [KC] templates of quest 1660003;
 --     SPELL_EFFECT_KILL_CREDIT 134 = RewardPlayerAndGroupAtEvent).
---   * Hiding: a relic that has been prayed at is removed from the player's view
---     (OBJECT_VISIBILITY conditions: a relic is only visible while its own objective is
---     still open and the quest is not yet rewarded). The core sweeps a moving player's
---     visibility about a second after the next step, so the relic vanishes as soon as
---     the player walks on; after the reward it stays hidden for good. GMs bypass
---     visibility conditions - test with `.gm off` or a normal character.
+--   * Permanence: the relics are never hidden - a relic stays visible and usable for
+--     every player after it has been prayed at. An earlier revision hid each relic from
+--     the player who credited its objective (type 30 OBJECT_VISIBILITY conditions);
+--     those rows are removed and only cleaned up below.
 --
 -- Activation: worldserver RESTART - gameobject_template and the DBC stores (spell_dbc)
--- load at startup and have no reload command. The visibility conditions load at startup
--- too, or live with `.reload conditions`.
--- Idempotent: template updates + delete/reinsert of the objects' scripts, rows and
--- visibility conditions.
+-- load at startup and have no reload command.
+-- Idempotent: template updates + delete/reinsert of the objects' scripts and rows.
 
 UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256701 WHERE `entry` = 2300520;
 UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256726 WHERE `entry` = 2300521;
@@ -3782,24 +3778,12 @@ VALUES
 (256728, 0, 4, 14, 47, 101, 0, 2, -1, 134, 1, 1, 161825, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
 (365036, 268435456, 4, 14, 63, 101, 6, 2, -1, 134, 1, 1, 161826, 1, 1, 1, 364270, 300, 1, 16712190, 16712190, 16712190, 16712190);
 
--- Hide each relic once its prayer is credited: it stays visible only while its own
--- objective of 1660003 is still open and the quest is not rewarded (both conditions
--- negative, one else group = AND). The next visibility refresh after the player moves
--- removes it for that player only. Objective indexes: Journal 0, Staff 1, Idol 2, Jewel 3.
+-- Permanence: no visibility conditions - a relic stays in the world for every player
+-- after it has been prayed at. The delete clears the hide rows an earlier revision
+-- created (the realm's own port of this content carries them too) and keeps re-applies
+-- clean; nothing is inserted.
 
 DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 30 AND `SourceGroup` = 1 AND `SourceEntry` IN (2300520, 2300521, 2300522, 2300523);
-
-INSERT INTO `conditions`
-(`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
-VALUES
-(30, 1, 2300520, 0, 0, 48, 0, 1660003, 0, 1, 1, 0, 0, '', '1660003: hide the Journal relic once prayed at'),
-(30, 1, 2300520, 0, 0, 8, 0, 1660003, 0, 0, 1, 0, 0, '', '1660003: keep the Journal relic hidden after reward'),
-(30, 1, 2300521, 0, 0, 48, 0, 1660003, 1, 1, 1, 0, 0, '', '1660003: hide the Staff relic once prayed at'),
-(30, 1, 2300521, 0, 0, 8, 0, 1660003, 0, 0, 1, 0, 0, '', '1660003: keep the Staff relic hidden after reward'),
-(30, 1, 2300522, 0, 0, 48, 0, 1660003, 2, 1, 1, 0, 0, '', '1660003: hide the Idol relic once prayed at'),
-(30, 1, 2300522, 0, 0, 8, 0, 1660003, 0, 0, 1, 0, 0, '', '1660003: keep the Idol relic hidden after reward'),
-(30, 1, 2300523, 0, 0, 48, 0, 1660003, 3, 1, 1, 0, 0, '', '1660003: hide the Jewel relic once prayed at'),
-(30, 1, 2300523, 0, 0, 8, 0, 1660003, 0, 0, 1, 0, 0, '', '1660003: keep the Jewel relic hidden after reward');
 
 -- ##########################################################################################
 
