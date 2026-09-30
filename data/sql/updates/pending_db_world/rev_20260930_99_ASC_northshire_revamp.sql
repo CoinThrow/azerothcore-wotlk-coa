@@ -1,5 +1,5 @@
 -- ==========================================================================================
--- rev_20260929_10_ASC_northshire_revamp - Northshire Valley / Spada world content
+-- rev_20260930_99_ASC_northshire_revamp - Northshire Valley / Spada world content
 --
 -- Everything custom that this realm's world database adds on top of the base core, as a
 -- single content update: the Northshire Valley custom layer (NPCs, spawns, props, emotes,
