@@ -4943,3 +4943,110 @@ INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 
 UPDATE `quest_template_addon` SET `BreadcrumbForQuestId` = 1660056 WHERE `ID` = 1660055;
 UPDATE `quest_template_addon` SET `PrevQuestID` = 1660056 WHERE `ID` = 1660057;
+
+-- ---------------------------------------------------------------------------
+-- Seven Years of Bad Luck: mirror shard spawn corrections
+-- ---------------------------------------------------------------------------
+-- The mirror shards around the manor are repositioned and thinned, two shards are
+-- added, and three stray critter spawns are removed (Forest Spider 80288, Sheep
+-- 80290, Thuros Lightfingers 134008; the first two had been relocated onto the
+-- manor grounds by the Elwynn stock relocation file).
+
+SET @CGUID  := 80288;
+SET @OGUID  := 7911000;
+
+-- creature ------------------------------------------------------------------------------
+DELETE FROM `creature` WHERE `guid` IN (@CGUID, @CGUID+2, @CGUID+53720);
+
+-- creature_addon ------------------------------------------------------------------------
+DELETE FROM `creature_addon` WHERE `guid` IN (@CGUID, @CGUID+2, @CGUID+53720);
+
+-- gameobject ----------------------------------------------------------------------------
+DELETE FROM `gameobject` WHERE `guid` IN (@OGUID, @OGUID+1, @OGUID+2, @OGUID+3, @OGUID+4,
+   @OGUID+5, @OGUID+6, @OGUID+7, @OGUID+8, @OGUID+9, @OGUID+10, @OGUID+11, @OGUID+12,
+   @OGUID+14, @OGUID+15, @OGUID+16);
+INSERT INTO `gameobject`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`,
+   `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`,
+   `animprogress`, `state`) VALUES
+  (@OGUID, 2300546, 0, 1, 1, -9275.875000, 456.062500, 82.248207, 4.486969, 0.000000000,
+   0.000000000, -0.782149482, 0.623090834, 60, 100, 1),
+  (@OGUID+4, 2300546, 0, 1, 1, -9283.238281, 466.894531, 89.870483, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1),
+  (@OGUID+5, 2300546, 0, 1, 1, -9299.470703, 462.406250, 86.030952, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1),
+  (@OGUID+7, 2300546, 0, 1, 1, -9283.470703, 478.667969, 77.805656, 1.790808, 0.000000000,
+   0.000000000, 0.780461650, 0.625203657, 60, 100, 1),
+  (@OGUID+9, 2300546, 0, 1, 1, -9279.664062, 492.011719, 78.589531, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1),
+  (@OGUID+10, 2300546, 0, 1, 1, -9307.068359, 462.580078, 78.477119, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1),
+  (@OGUID+11, 2300546, 0, 1, 1, -9310.453125, 501.781250, 77.561836, 2.953911, 0.000000000,
+   0.000000000, -0.995600177, -0.0937031930, 60, 100, 1),
+  (@OGUID+14, 2300546, 0, 1, 1, -9270.294922, 452.421875, 79.224075, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1),
+  (@OGUID+16, 2300546, 0, 1, 1, -9308.707031, 428.375000, 77.485962, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1);
+
+-- gameobject (new spawns) ---------------------------------------------------------------
+DELETE FROM `gameobject` WHERE `guid` IN (8001305, 8001306);
+INSERT INTO `gameobject`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`,
+   `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`,
+   `animprogress`, `state`) VALUES
+  (8001305, 2300546, 0, 1, 1, -9270.521484, 457.613281, 82.248207, 0.209746, 0.000000000,
+   0.000000000, 0.104680696, 0.994505883, 60, 100, 1),
+  (8001306, 2300546, 0, 1, 1, -9315.384766, 481.646484, 78.069740, 4.681728, 0.000000000,
+   0.000000000, -0.717863680, 0.696183695, 60, 100, 1);
+
+-- ---------------------------------------------------------------------------
+-- Seven Years of Bad Luck: the shard click (Inspecting cast + Curse Shard)
+-- ---------------------------------------------------------------------------
+-- Data10 is the GOOBER click spell: the using player performs the real 3 second
+-- 'Inspecting' cast (256702, the native client record) at the shard. Its override
+-- below credits the inspection (162920) and summons the 'Curse Shard' 162919
+-- (display 33054, the entity the realm's creature cache knows) from the caster
+-- when the cast lands. The questId in Data1 already gates the cast to an open
+-- 1660057; the smart row below holds the shard despawn until the cast finishes.
+
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `Data10` = 256702 WHERE `entry` = 2300546;
+
+DELETE FROM `spell_dbc` WHERE `Id` = 256702;
+
+INSERT INTO `spell_dbc`
+(`Id`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `Effect_2`, `ImplicitTargetA_2`, `EffectMiscValue_2`, `EffectMiscValueB_2`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
+VALUES
+(256702, 4, 14, 47, 101, 2, -1, 134, 1, 1, 162920, 28, 1, 162919, 64, 1, 1, 1, 278463, 372, 1, 16712190, 16712190, 16712190, 16712190);
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 2300546 AND `source_type` = 1;
+
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(2300546, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 41, 3000, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - inspected: despawn as the Inspecting cast completes');
+
+-- Smart-event conditions key on the entryorguid and the row id + 1.
+
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` = 2300546 AND `SourceId` = 1;
+
+INSERT INTO `conditions`
+(`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
+VALUES
+(22, 1, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - despawn only while quest 1660057 is in progress');
+
+INSERT INTO `creature_template` (`entry`, `name`, `subname`, `minlevel`, `maxlevel`, `faction`, `unit_class`, `AIName`)
+VALUES (162919, 'Curse Shard', NULL, 6, 7, 14, 1, 'SmartAI')
+ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `subname` = VALUES(`subname`), `minlevel` = VALUES(`minlevel`), `maxlevel` = VALUES(`maxlevel`), `faction` = VALUES(`faction`), `unit_class` = VALUES(`unit_class`), `AIName` = VALUES(`AIName`);
+
+DELETE FROM `creature_template_model` WHERE `CreatureID` = 162919;
+
+INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`)
+VALUES (162919, 0, 33054, 1, 1);
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 162919 AND `source_type` = 0;
+
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(162919, 0, 0, 0, 7, 0, 100, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Curse Shard - On Evade - Despawn'),
+(162919, 0, 1, 0, 54, 0, 100, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 21, 100, 0, 0, 0, 0, 0, 0, 0, 'Curse Shard - On Just Summoned - Attack the closest player');
