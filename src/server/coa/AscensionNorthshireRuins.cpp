@@ -15,8 +15,10 @@
 namespace
 {
 constexpr uint32 QUEST_ACCURSED_SISTERHOOD = 1660003;
+constexpr uint32 QUEST_SEVEN_YEARS_OF_BAD_LUCK = 1660057;
 constexpr uint32 QUEST_WORM_EATEN_APPLE = 1660058;
 constexpr uint32 NPC_KOBOLD_PROSPECTOR = 162915;
+constexpr uint32 NPC_CURSE_SHARD = 162919;
 constexpr uint32 AmbusherIdleLifetimeMs = 30000;
 
 struct Relic
@@ -27,14 +29,16 @@ struct Relic
     uint32 quest;
     std::chrono::seconds respawn;
     uint32 ambusher;
+    uint32 ambusherChance;
 };
 
-constexpr std::array<Relic, 5> Relics = {{
-    {2300520, 256701, 161715, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
-    {2300521, 256726, 161824, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
-    {2300522, 256701, 161825, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
-    {2300523, 256726, 161826, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
-    {2300579, 267031, 162940, QUEST_WORM_EATEN_APPLE, std::chrono::seconds(60), NPC_KOBOLD_PROSPECTOR},
+constexpr std::array<Relic, 6> Relics = {{
+    {2300520, 256701, 161715, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0, 0},
+    {2300521, 256726, 161824, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0, 0},
+    {2300522, 256701, 161825, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0, 0},
+    {2300523, 256726, 161826, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0, 0},
+    {2300546, 256702, 162920, QUEST_SEVEN_YEARS_OF_BAD_LUCK, std::chrono::seconds(60), NPC_CURSE_SHARD, 100},
+    {2300579, 267031, 162940, QUEST_WORM_EATEN_APPLE, std::chrono::seconds(60), NPC_KOBOLD_PROSPECTOR, 75},
 }};
 
 struct RopeLanding
@@ -111,7 +115,7 @@ class spell_coa_abbess_relic_prayer : public SpellScript
             return;
 
         player->KilledMonsterCredit(relic->credit);
-        if (relic->ambusher && roll_chance_i(75))
+        if (relic->ambusher && roll_chance_i(relic->ambusherChance))
             if (TempSummon* ambusher = go->SummonCreature(relic->ambusher, *go, TEMPSUMMON_TIMED_DESPAWN_OOC_ALIVE,
                                                           AmbusherIdleLifetimeMs))
                 ambusher->AI()->AttackStart(player);

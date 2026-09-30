@@ -3793,8 +3793,8 @@ DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 30 AND `SourceGroup` 
 -- the click runs the 3 second cast and only the completed cast reaches the handler,
 -- which credits 162940, rolls the 75% ambush at the warren and despawns it - an
 -- interrupted cast leaves everything unchanged. The handler binding covers the warren's
--- spell alone; the sisterhood relics keep their data10 credits, and 267031 keeps the
--- native DUMMY effect the handler listens for.
+-- and the shard's spells alone; the sisterhood relics keep their data10 credits, and
+-- 267031 keeps the native DUMMY effect the handler listens for.
 
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_coa_abbess_relic_prayer';
 
@@ -5002,43 +5002,27 @@ INSERT INTO `gameobject`
 -- ---------------------------------------------------------------------------
 -- Seven Years of Bad Luck: the shard click (Inspecting cast + Curse Shard)
 -- ---------------------------------------------------------------------------
--- Data10 is the GOOBER click spell: the using player performs the real 3 second
--- 'Inspecting' cast (256702, the native client record) at the shard; its override
--- credits the inspection (162920) when the cast lands. The click also arms a
--- three second timer on the shard itself that summons the 'Curse Shard' 162919
--- (display 33054, the entity the realm's creature cache knows) at the shard and
--- then despawns it. The questId in Data1 already gates the cast to an open
--- 1660057, and the smart-event condition below holds the click rows to it too.
+-- The shard uses the realm's own handler, like the warren: the click runs the 3
+-- second 'Inspecting' cast (256702, the native client record) at the shard, and only
+-- the completed cast reaches the handler, which credits the inspection (162920),
+-- summons the 'Curse Shard' 162919 (display 33054, the entity the realm's creature
+-- cache knows) at the shard and despawns it - an interrupted cast changes nothing.
+-- The binding covers 256702 alone; the native DUMMY effect is kept.
 
-UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `Data10` = 256702 WHERE `entry` = 2300546;
+UPDATE `gameobject_template` SET `ScriptName` = 'go_coa_abbess_relic', `AIName` = '', `Data10` = 0 WHERE `entry` = 2300546;
+
+DELETE FROM `spell_script_names` WHERE `spell_id` = 256702;
+
+INSERT INTO `spell_script_names` (`spell_id`, `ScriptName`) VALUES (256702, 'spell_coa_abbess_relic_prayer');
 
 DELETE FROM `spell_dbc` WHERE `Id` = 256702;
 
-INSERT INTO `spell_dbc`
-(`Id`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
-VALUES
-(256702, 4, 14, 47, 101, 2, -1, 134, 1, 1, 162920, 1, 1, 1, 278463, 372, 1, 16712190, 16712190, 16712190, 16712190);
-
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 2300546 AND `source_type` = 1;
-
-INSERT INTO `smart_scripts`
-(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
-VALUES
-(2300546, 1, 0, 1, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 67, 1, 3000, 3000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - clicked: arm the inspection timer'),
-(2300546, 1, 1, 0, 61, 0, 100, 0, 0, 0, 0, 0, 0, 0, 41, 3500, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - inspected: despawn as the inspection ends'),
-(2300546, 1, 2, 0, 59, 0, 100, 0, 1, 0, 0, 0, 0, 0, 12, 162919, 7, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - the curse lets go: summon the Curse Shard at the shard');
-
--- Smart-event conditions key on the entryorguid and the row id + 1.
 
 DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` = 2300546 AND `SourceId` = 1;
 
-INSERT INTO `conditions`
-(`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
-VALUES
-(22, 1, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - despawn only while quest 1660057 is in progress');
-
 INSERT INTO `creature_template` (`entry`, `name`, `subname`, `minlevel`, `maxlevel`, `faction`, `unit_class`, `AIName`)
-VALUES (162919, 'Curse Shard', NULL, 6, 7, 14, 1, 'SmartAI')
+VALUES (162919, 'Curse Shard', NULL, 6, 7, 14, 1, '')
 ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `subname` = VALUES(`subname`), `minlevel` = VALUES(`minlevel`), `maxlevel` = VALUES(`maxlevel`), `faction` = VALUES(`faction`), `unit_class` = VALUES(`unit_class`), `AIName` = VALUES(`AIName`);
 
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 162919;
@@ -5047,12 +5031,6 @@ INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`,
 VALUES (162919, 0, 33054, 0.75, 1);
 
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 162919 AND `source_type` = 0;
-
-INSERT INTO `smart_scripts`
-(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
-VALUES
-(162919, 0, 0, 0, 7, 0, 100, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Curse Shard - On Evade - Despawn'),
-(162919, 0, 1, 0, 54, 0, 100, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 21, 100, 0, 0, 0, 0, 0, 0, 0, 'Curse Shard - On Just Summoned - Attack the closest player');
 
 -- ---------------------------------------------------------------------------
 -- Seven Years of Bad Luck: shard spawn corrections, continued
