@@ -4847,3 +4847,45 @@ UPDATE `gameobject` SET `VerifiedBuild` = NULL, `Comment` = NULL WHERE `guid` = 
 UPDATE `gameobject` SET `orientation` = 1.31188, `rotation2` = 0.609903, `rotation3` = 0.792476, `VerifiedBuild` = NULL, `Comment` = NULL WHERE `guid` = 7500173;
 UPDATE `gameobject` SET `rotation2` = 0.9568, `VerifiedBuild` = NULL, `Comment` = NULL WHERE `guid` = 7500211;
 UPDATE `gameobject` SET `VerifiedBuild` = NULL, `Comment` = NULL WHERE `guid` = 7500212;
+
+-- Spawn corrections: stray spawns removed; relic marker and Journal re-stated.
+SET @CGUID := 80131;
+SET @OGUID := 7500165;
+
+-- creature ------------------------------------------------------------------------------
+DELETE FROM `creature` WHERE `guid` IN (@CGUID, @CGUID+5, @CGUID+21, @CGUID+7420217,
+   @CGUID+8922990, @CGUID+8922992, @CGUID+8922993, @CGUID+8922996, @CGUID+8922997);
+INSERT INTO `creature`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`,
+   `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`,
+   `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`,
+   `dynamicflags`) VALUES
+  (@CGUID+7420217, 161715, 0, 1, 1, 0, -8638.850000, -404.450000, 54.720000, 3.187700, 120,
+   0.000000, 0, 1, 0, 0, 0, 0, 0);
+
+-- 80152's script rows go with the spawn; group 8015200 is called only by -80152.
+DELETE FROM `smart_scripts` WHERE `entryorguid` IN (-80152, 8015200);
+
+-- creature_addon ------------------------------------------------------------------------
+DELETE FROM `creature_addon` WHERE `guid` IN (@CGUID, @CGUID+5, @CGUID+21, @CGUID+8922990,
+   @CGUID+8922992, @CGUID+8922993, @CGUID+8922996, @CGUID+8922997);
+INSERT INTO `creature_addon`
+  (`guid`, `path_id`, `mount`, `bytes1`, `bytes2`, `emote`, `visibilityDistanceType`,
+   `auras`) VALUES
+  (@CGUID+7420217, 0, 0, 0, 1, 0, 0, NULL)
+ON DUPLICATE KEY UPDATE `path_id` = VALUES(`path_id`), `mount` = VALUES(`mount`),
+  `emote` = VALUES(`emote`), `auras` = VALUES(`auras`),
+  `bytes1` = (`bytes1` & 0xFFFFFF00) | (VALUES(`bytes1`) & 0xFF);
+
+-- gameobject ----------------------------------------------------------------------------
+DELETE FROM `gameobject` WHERE `guid` IN (@OGUID, @OGUID+7, @OGUID+409836, @OGUID+409846,
+   @OGUID+409847, @OGUID+409848, @OGUID+411935, @OGUID+411937, @OGUID+411938, @OGUID+411939,
+   @OGUID+411940, @OGUID+411941, @OGUID+411942, @OGUID+411943, @OGUID+411944, @OGUID+411945,
+   @OGUID+411946, @OGUID+411947, @OGUID+411948, @OGUID+411949, @OGUID+411950, @OGUID+411951,
+   @OGUID+411952);
+INSERT INTO `gameobject`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`,
+   `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`,
+   `animprogress`, `state`) VALUES
+  (@OGUID, 2300520, 0, 1, 1, -8575.740000, -253.084000, 53.722800, 2.895400, 0.000000000,
+   0.000000000, 0.992431000, 0.122801000, 120, 100, 1);
