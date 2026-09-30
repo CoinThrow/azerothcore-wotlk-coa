@@ -3790,7 +3790,10 @@ DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 30 AND `SourceGroup` 
 -- these spells now, so unbind the replaced handler (it despawns the object it is cast at
 -- and is cast at a relic by the port's gameobject script) and give 2300579 'Kobold
 -- Warren' (quest 1660058) a plain click credit plus its ambush - its click must NOT
--- cast the Staff prayer 256726, whose credit belongs to a sisterhood relic.
+-- cast the Staff prayer 256726, whose credit belongs to a sisterhood relic. The client
+-- also arrives with a second, report-use packet for a quest object and the port's handler
+-- was reached by both; the rows answer the plain use only (event_param1 = 1) and the
+-- conditions below keep them to an in-progress 1660058, as the replaced handler did.
 
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_coa_abbess_relic_prayer';
 
@@ -3801,9 +3804,20 @@ DELETE FROM `smart_scripts` WHERE `entryorguid` = 2300579 AND `source_type` = 1;
 INSERT INTO `smart_scripts`
 (`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
 VALUES
-(2300579, 1, 0, 0, 64, 0, 100, 0, 0, 0, 0, 0, 0, 0, 33, 162940, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - [KC] Kobold Warren Destroyed'),
-(2300579, 1, 1, 0, 64, 0, 50, 0, 0, 0, 0, 0, 0, 0, 12, 162915, 4, 30000, 1, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - 50% Kobold Prospector ambush'),
-(2300579, 1, 2, 0, 64, 0, 100, 0, 0, 0, 0, 0, 0, 0, 41, 0, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - destroyed, back in 60 s');
+(2300579, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 33, 162940, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - [KC] Kobold Warren Destroyed'),
+(2300579, 1, 1, 0, 64, 0, 50, 0, 1, 0, 0, 0, 0, 0, 12, 162915, 4, 30000, 1, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - 50% Kobold Prospector ambush'),
+(2300579, 1, 2, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 41, 0, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Kobold Warren - destroyed, back in 60 s');
+
+-- Smart-event conditions key on the entryorguid and the row id + 1.
+
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` = 2300579 AND `SourceId` = 1;
+
+INSERT INTO `conditions`
+(`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
+VALUES
+(22, 1, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - credit only while quest 1660058 is in progress'),
+(22, 2, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - ambush only while quest 1660058 is in progress'),
+(22, 3, 2300579, 1, 0, 47, 0, 1660058, 8, 0, 0, 0, 0, '', 'Kobold Warren - despawn only while quest 1660058 is in progress');
 
 -- ##########################################################################################
 
