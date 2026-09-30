@@ -34,7 +34,7 @@ constexpr std::array<Relic, 5> Relics = {{
     {2300521, 256726, 161824, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
     {2300522, 256701, 161825, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
     {2300523, 256726, 161826, QUEST_ACCURSED_SISTERHOOD, std::chrono::seconds(120), 0},
-    {2300579, 256726, 162940, QUEST_WORM_EATEN_APPLE, std::chrono::seconds(60), NPC_KOBOLD_PROSPECTOR},
+    {2300579, 267031, 162940, QUEST_WORM_EATEN_APPLE, std::chrono::seconds(60), NPC_KOBOLD_PROSPECTOR},
 }};
 
 struct RopeLanding
@@ -111,7 +111,7 @@ class spell_coa_abbess_relic_prayer : public SpellScript
             return;
 
         player->KilledMonsterCredit(relic->credit);
-        if (relic->ambusher && roll_chance_i(50))
+        if (relic->ambusher && roll_chance_i(75))
             if (TempSummon* ambusher = go->SummonCreature(relic->ambusher, *go, TEMPSUMMON_TIMED_DESPAWN_OOC_ALIVE,
                                                           AmbusherIdleLifetimeMs))
                 ambusher->AI()->AttackStart(player);
