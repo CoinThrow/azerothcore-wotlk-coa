@@ -2266,7 +2266,10 @@ REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconN
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300505, 3, 300450, 'Lost Page IV', '', '', '', 1.00, 1689, 2300505, 0, 0, 0, 0, 0, 0, 1660001, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'worldforged_pickup', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300516, 3, 300450, 'Lost Page V', '', '', '', 1.00, 1689, 2300516, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'worldforged_pickup', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300517, 3, 300450, 'Lost Page VI', '', '', '', 1.00, 1689, 2300517, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'worldforged_pickup', 12340);
--- The four relic templates (2300520-2300523) are left to the realm's content; see section 9.
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300520, 10, 1029136, 'Abbess’ Journal', '', '', '', 1.00, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300521, 10, 87111, 'Abbess’s Staff', '', '', '', 1.25, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300522, 10, 63523, 'Heretical Idol Purified', '', '', '', 1.50, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300523, 10, 7075, 'Jewel', '', '', '', 0.75, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300565, 31, 8196, 'Doodad_InstanceNewPortal_Purple01', '', '', '', 1.75, 936, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300566, 31, 8197, 'Doodad_InstanceNewPortal_Purple_Skull01', '', '', '', 1.75, 936, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300567, 31, 9040, 'Doodad_InstancePortal_Green_5Man_Mythic01', '', '', '', 1.50, 936, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
@@ -2957,15 +2960,18 @@ VALUES
 --   * 1660055 The Maid I Left Behind starts at Bianca Spada 161700 - the quest text is Bianca
 --     speaking about her maid Dulcinea ("I left one of my maids in Goldshire", "my brother");
 --     the backup had Moroi as the starter
---   * 1660055/1660056/1660057 links belong to the realm content: Dulcinea 162800 starts
---     1660056 'Agria's Medicine' and ends 1660055; Aldia Crayon 162802 starts 1660057
---     'Seven Years of Bad Luck' and ends 1660056/1660057 (see the NPC notes above).
---     Neither DELETE list below names those three quests and no insert re-creates their
---     rows, so a re-import leaves the realm's links in place.
+--   * 1660056 Agria's Medicine and 1660057 Seven Years of Bad Luck have NO creature starter
+--     (2026-09-29): Moroi was their starter; both were removed and will go to a new
+--     NPC that does not exist yet. The starter DELETE below still covers both ids, so a
+--     re-import removes a lingering row; nothing re-inserts one.
+--   * 1660055/1660056/1660057 have NO ender either (2026-09-29): Moroi ended all three in the
+--     backup; the rows were removed - their enders belong to a new NPC that does
+--     not exist yet. The ender DELETE below still covers the three ids, so a re-import removes
+--     a lingering row; nothing re-inserts one.
 --
 -- Idempotent: removes only this family's rows, then re-inserts them.
 
-DELETE FROM `creature_queststarter` WHERE `quest` IN (1660000, 1660001, 1660002, 1660003, 1660004, 1660005, 1660038);
+DELETE FROM `creature_queststarter` WHERE `quest` IN (1660000, 1660001, 1660002, 1660003, 1660004, 1660005, 1660038, 1660055, 1660056, 1660057);
 
 INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 (161700, 1660000),
@@ -2974,9 +2980,10 @@ INSERT INTO `creature_queststarter` (`id`, `quest`) VALUES
 (161702, 1660003),
 (161702, 1660004),
 (161705, 1660005),
-(161702, 1660038);
+(161702, 1660038),
+(161700, 1660055);
 
-DELETE FROM `creature_questender` WHERE `quest` IN (1660000, 1660001, 1660002, 1660003, 1660004, 1660005, 1660036, 1660038);
+DELETE FROM `creature_questender` WHERE `quest` IN (1660000, 1660001, 1660002, 1660003, 1660004, 1660005, 1660036, 1660038, 1660055, 1660056, 1660057);
 
 INSERT INTO `creature_questender` (`id`, `quest`) VALUES
 (161701, 1660000),
@@ -3720,24 +3727,60 @@ UPDATE `creature` SET `Comment` = 'CoA - Defias Trainee', `VerifiedBuild` = 1234
 SET @OGUID  := 7500128;
 
 -- ##########################################################################################
--- SECTION 9 - relic purification (visibility)
+-- SECTION 9 - relic purification
 -- ##########################################################################################
 
 -- Relic purification for quest 1660003 'Accursed Sisterhood' (Spada chain).
 --
--- The purification flow is owned by the core's AscensionNorthshireRuins script - the
--- prayer cast and the kill credits are handled there - so this file leaves the four
--- relics' gameobject_template rows, spell_dbc records and smart scripts untouched.
+-- Design: clicking a relic makes the PLAYER cast Heartfelt Prayer (3 second cast)
+-- and the matching objective completes only when that cast succeeds:
+--   * The four relic gameobjects are GOOBERs with data1 = 1660003; data10 is the
+--     GOOBER spell id and GameObject::Use casts it as the using player (the default
+--     spell caster is the player, TRIGGERED_NONE = a real cast), gated by the object's
+--     questId - so it only fires while the quest is INCOMPLETE and no scripts or
+--     gossip are needed at all.
+--   * Each relic drives its own Heartfelt Prayer variant (256701 / 256726 / 256728 /
+--     365036 all exist in the client AND the server Spell.dbc), which lets the spell
+--     itself carry the matching kill credit: the credit is applied by the spell when
+--     the cast completes (Spell::DoAllEffectOnTarget), so moving or being interrupted
+--     credits nothing.
+--   * spell_dbc REPLACES the whole DBC record, so every field the cast uses is
+--     repeated here: 3000 ms cast (CastingTimeIndex 14), the original interrupt flags,
+--     combat range 2, equipped item class -1, school, visual/icon, the 1.0 effect
+--     multipliers and the 0xFF0FBE name/description locale masks. Strings stay empty -
+--     the loader keeps the DBC text for empty SQL strings.
+--   * Kill credits: 256701 Journal -> 161715, 256726 Staff -> 161824, 256728 Idol ->
+--     161825, 365036 Jewel -> 161826 (the invisible [KC] templates of quest 1660003;
+--     SPELL_EFFECT_KILL_CREDIT 134 = RewardPlayerAndGroupAtEvent).
+--   * Hiding: a relic that has been prayed at is removed from the player's view
+--     (OBJECT_VISIBILITY conditions: a relic is only visible while its own objective is
+--     still open and the quest is not yet rewarded). The core sweeps a moving player's
+--     visibility about a second after the next step, so the relic vanishes as soon as
+--     the player walks on; after the reward it stays hidden for good. GMs bypass
+--     visibility conditions - test with `.gm off` or a normal character.
 --
--- This section adds only the hiding: a relic that has been prayed at is removed from
--- the player's view (OBJECT_VISIBILITY conditions: a relic is only visible while its
--- own objective is still open and the quest is not yet rewarded). The core sweeps a
--- moving player's visibility about a second after the next step, so the relic vanishes
--- as soon as the player walks on; after the reward it stays hidden for good. GMs bypass
--- visibility conditions - test with `.gm off` or a normal character.
---
--- Activation: the visibility conditions load at startup, or live with `.reload conditions`.
--- Idempotent: delete/reinsert of the visibility conditions.
+-- Activation: worldserver RESTART - gameobject_template and the DBC stores (spell_dbc)
+-- load at startup and have no reload command. The visibility conditions load at startup
+-- too, or live with `.reload conditions`.
+-- Idempotent: template updates + delete/reinsert of the objects' scripts, rows and
+-- visibility conditions.
+
+UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256701 WHERE `entry` = 2300520;
+UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256726 WHERE `entry` = 2300521;
+UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256728 WHERE `entry` = 2300522;
+UPDATE `gameobject_template` SET `AIName` = '', `data10` = 365036 WHERE `entry` = 2300523;
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` IN (2300520, 2300521, 2300522, 2300523) AND `source_type` = 1;
+
+DELETE FROM `spell_dbc` WHERE `Id` IN (256701, 256726, 256728, 365036);
+
+INSERT INTO `spell_dbc`
+(`Id`, `AttributesEx`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
+VALUES
+(256701, 0, 4, 14, 63, 101, 0, 2, -1, 134, 1, 1, 161715, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
+(256726, 0, 4, 14, 47, 101, 0, 2, -1, 134, 1, 1, 161824, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
+(256728, 0, 4, 14, 47, 101, 0, 2, -1, 134, 1, 1, 161825, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
+(365036, 268435456, 4, 14, 63, 101, 6, 2, -1, 134, 1, 1, 161826, 1, 1, 1, 364270, 300, 1, 16712190, 16712190, 16712190, 16712190);
 
 -- Hide each relic once its prayer is credited: it stays visible only while its own
 -- objective of 1660003 is still open and the quest is not rewarded (both conditions
