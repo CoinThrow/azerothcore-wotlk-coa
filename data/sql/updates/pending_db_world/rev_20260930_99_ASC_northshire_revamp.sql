@@ -5003,27 +5003,30 @@ INSERT INTO `gameobject`
 -- Seven Years of Bad Luck: the shard click (Inspecting cast + Curse Shard)
 -- ---------------------------------------------------------------------------
 -- Data10 is the GOOBER click spell: the using player performs the real 3 second
--- 'Inspecting' cast (256702, the native client record) at the shard. Its override
--- below credits the inspection (162920) and summons the 'Curse Shard' 162919
--- (display 33054, the entity the realm's creature cache knows) from the caster
--- when the cast lands. The questId in Data1 already gates the cast to an open
--- 1660057; the smart row below holds the shard despawn until the cast finishes.
+-- 'Inspecting' cast (256702, the native client record) at the shard; its override
+-- credits the inspection (162920) when the cast lands. The click also arms a
+-- three second timer on the shard itself that summons the 'Curse Shard' 162919
+-- (display 33054, the entity the realm's creature cache knows) at the shard and
+-- then despawns it. The questId in Data1 already gates the cast to an open
+-- 1660057, and the smart-event condition below holds the click rows to it too.
 
 UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `Data10` = 256702 WHERE `entry` = 2300546;
 
 DELETE FROM `spell_dbc` WHERE `Id` = 256702;
 
 INSERT INTO `spell_dbc`
-(`Id`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `Effect_2`, `ImplicitTargetA_2`, `EffectMiscValue_2`, `EffectMiscValueB_2`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
+(`Id`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
 VALUES
-(256702, 4, 14, 47, 101, 2, -1, 134, 1, 1, 162920, 28, 1, 162919, 64, 1, 1, 1, 278463, 372, 1, 16712190, 16712190, 16712190, 16712190);
+(256702, 4, 14, 47, 101, 2, -1, 134, 1, 1, 162920, 1, 1, 1, 278463, 372, 1, 16712190, 16712190, 16712190, 16712190);
 
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 2300546 AND `source_type` = 1;
 
 INSERT INTO `smart_scripts`
 (`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
 VALUES
-(2300546, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 41, 3000, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - inspected: despawn as the Inspecting cast completes');
+(2300546, 1, 0, 1, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 67, 1, 3000, 3000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - clicked: arm the inspection timer'),
+(2300546, 1, 1, 0, 61, 0, 100, 0, 0, 0, 0, 0, 0, 0, 41, 3500, 60, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - inspected: despawn as the inspection ends'),
+(2300546, 1, 2, 0, 59, 0, 100, 0, 1, 0, 0, 0, 0, 0, 12, 162919, 7, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Mirror Shard - the curse lets go: summon the Curse Shard at the shard');
 
 -- Smart-event conditions key on the entryorguid and the row id + 1.
 
@@ -5041,7 +5044,7 @@ ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `subname` = VALUES(`subname`), 
 DELETE FROM `creature_template_model` WHERE `CreatureID` = 162919;
 
 INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`)
-VALUES (162919, 0, 33054, 1, 1);
+VALUES (162919, 0, 33054, 0.75, 1);
 
 DELETE FROM `smart_scripts` WHERE `entryorguid` = 162919 AND `source_type` = 0;
 
@@ -5050,3 +5053,29 @@ INSERT INTO `smart_scripts`
 VALUES
 (162919, 0, 0, 0, 7, 0, 100, 0, 0, 0, 0, 0, 0, 0, 41, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Curse Shard - On Evade - Despawn'),
 (162919, 0, 1, 0, 54, 0, 100, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 21, 100, 0, 0, 0, 0, 0, 0, 0, 'Curse Shard - On Just Summoned - Attack the closest player');
+
+-- ---------------------------------------------------------------------------
+-- Seven Years of Bad Luck: shard spawn corrections, continued
+-- ---------------------------------------------------------------------------
+-- Shard 7911000 moves onto the coordinates the block above gives 7911010, the old
+-- 7911003 spot stays removed, and shard 8001307 is added.
+
+SET @OGUID := 7911000;
+
+-- gameobject ----------------------------------------------------------------------------
+DELETE FROM `gameobject` WHERE `guid` IN (@OGUID, @OGUID+3);
+INSERT INTO `gameobject`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`,
+   `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`,
+   `animprogress`, `state`) VALUES
+  (@OGUID, 2300546, 0, 1, 1, -9307.068359, 462.580078, 78.477119, 0.000000, 0.000000000,
+   0.000000000, 0.000000000, 1.000000000, 60, 100, 1);
+
+-- gameobject (new spawns) ---------------------------------------------------------------
+DELETE FROM `gameobject` WHERE `guid` = 8001307;
+INSERT INTO `gameobject`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`,
+   `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`,
+   `animprogress`, `state`) VALUES
+  (8001307, 2300546, 0, 1, 1, -9300.369141, 442.689453, 78.217064, 4.803136, 0.000000000,
+   0.000000000, 0.674305996, -0.738452045, 60, 100, 1);
