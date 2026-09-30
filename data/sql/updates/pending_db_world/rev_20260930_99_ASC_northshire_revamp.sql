@@ -2697,7 +2697,7 @@ UPDATE `creature_template` SET `HoverHeight` = 0 WHERE `entry` = 161702;
 --                                   the removal of the northshire layer's duplicate 7500369
 --   5. npc_spellclick_spells      - the portal click carrier (spell 12980)
 --   6. smart_scripts + conditions - the whole encounter AI (161713, 161904, 161908, 161909)
---   7. creature_text              - the boss's three intro lines (aggro, +4 s, +10 s)
+--   7. creature_text              - the boss's three lines (aggro, +4 s, on death)
 --
 -- Safe to re-import: script rows and the spawn are delete-and-reinsert, template values are
 -- updates and the other three template rows are upserts. 161713's base creature_template row is expected
@@ -2705,9 +2705,9 @@ UPDATE `creature_template` SET `HoverHeight` = 0 WHERE `entry` = 161702;
 -- here.
 --
 -- ENCOUNTER BEHAVIOUR
---   * he opens the fight with three spoken lines: line 0 the moment combat starts, line 1
---     after 4 seconds of combat and line 2 at 10 seconds (one-shot rows whose timers pause
---     out of combat, so a wipe re-arms them)
+--   * he opens the fight with two spoken lines: line 0 the moment combat starts and line 1
+--     after 4 seconds of combat (one-shot rows whose timers pause out of combat, so a wipe
+--     re-arms them); the third line is his dying line and plays when he dies
 --   * Shadow Bolt every 2 seconds while able to cast
 --   * Shadowfury 5 seconds after combat starts, then every 15 seconds
 --   * at 70% and again at 25% health the boss winds up with Dark Reality (256762, a 4 s
@@ -2880,7 +2880,7 @@ INSERT INTO `smart_scripts` (
 (161713, 0, 42, 23, 31, 2, 100, 1, 256762, 0, 0, 0, 0, 0, 11, 256763, 32, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - On Dark Reality landing - Shadow Shield + the 25% wave summons'),
 (161713, 0, 43, 0, 4, 0, 100, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - On Aggro - Say Line 0 (intro)'),
 (161713, 0, 44, 0, 0, 0, 100, 1, 4000, 4000, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - In Combat (4 s) - Say Line 1 (intro, once)'),
-(161713, 0, 45, 0, 0, 0, 100, 1, 10000, 10000, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - In Combat (10 s) - Say Line 2 (intro, once)'),
+(161713, 0, 45, 0, 6, 0, 100, 0, 0, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - On Death - Say Line 2 (dying line)'),
 (161713, 0, 46, 0, 110, 0, 100, 0, 1000, 1000, 1000, 1000, 35, 35, 24, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - Leash - On the aggro holder farther than ~40 yd - Evade and reset the encounter');
 
 DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` = 161713 AND `SourceGroup` IN (1, 2, 3, 12);
@@ -2927,11 +2927,10 @@ INSERT INTO `smart_scripts` (
 (161904, 0, 4, 0, 61, 0, 100, 0, 0, 0, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 21, 100, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - On Link - Attack the closest player'),
 (161904, 0, 5, 0, 38, 0, 100, 0, 1, 1, 0, 0, 0, 0, 49, 0, 0, 0, 0, 0, 0, 21, 500, 0, 0, 0, 0, 0, 0, 0, 'Wayward Theologian - On Data Set 1 1 - Attack the closest player again after a portal teleport');
 
--- 7. creature_text - the encounter's intro lines --------------------------------------------
--- His three opening lines, said in order: the first the moment combat starts (aggro), then
--- two timed rows - the second line 4 seconds into the fight, the third at 10 seconds. The
--- in-combat timers pause out of combat and re-arm on a wipe, so the lines only play while
--- he is actually fighting. Type 12 = monster say; no sound, no emote.
+-- 7. creature_text - the encounter's lines --------------------------------------------
+-- The first line lands the moment combat starts (aggro), the second follows 4 seconds in via
+-- a timed row (the timer pauses out of combat and re-arms on a wipe); the third is his dying
+-- line and plays from the On Death row. Type 12 = monster say; no sound, no emote.
 DELETE FROM `creature_text` WHERE `CreatureID` = 161713;
 
 INSERT INTO `creature_text`
