@@ -5079,3 +5079,19 @@ INSERT INTO `gameobject`
    `animprogress`, `state`) VALUES
   (8001307, 2300546, 0, 1, 1, -9300.369141, 442.689453, 78.217064, 4.803136, 0.000000000,
    0.000000000, 0.674305996, -0.738452045, 60, 100, 1);
+
+-- ---------------------------------------------------------------------------
+-- Seven Years of Bad Luck: shard spawn corrections, continued
+-- ---------------------------------------------------------------------------
+-- Shard 7911013 moves.
+
+SET @OGUID  := 7911013;
+
+-- gameobject ----------------------------------------------------------------------------
+DELETE FROM `gameobject` WHERE `guid` = @OGUID;
+INSERT INTO `gameobject`
+  (`guid`, `id`, `map`, `spawnMask`, `phaseMask`, `position_x`, `position_y`, `position_z`,
+   `orientation`, `rotation0`, `rotation1`, `rotation2`, `rotation3`, `spawntimesecs`,
+   `animprogress`, `state`) VALUES
+  (@OGUID, 2300546, 0, 1, 1, -9275.855469, 455.861328, 82.248207, 4.409257, 0.000000000,
+   0.000000000, -0.805763848, 0.592236963, 60, 100, 1);
