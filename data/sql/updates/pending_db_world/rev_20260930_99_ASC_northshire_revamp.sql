@@ -3313,7 +3313,7 @@ DELETE FROM `smart_scripts` WHERE `entryorguid` = -7500315 AND `source_type` = 0
 INSERT INTO `smart_scripts`
 (`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
 VALUES
-(-7500315, 0, 1, 0, 19, 0, 100, 0, 1660005, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Injured Northshire Guard - On quest 1660005 accepted - say his briefing line'),
+(-7500315, 0, 1, 0, 19, 0, 100, 0, 1660005, 20000, 20000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Injured Northshire Guard - On quest 1660005 accepted - say his briefing line'),
 (-7500315, 0, 2, 0, 63, 0, 100, 0, 0, 0, 0, 0, 0, 0, 142, 10, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Injured Northshire Guard - On Just Created - Set health to 10% - spawns injured'),
 (-7500315, 0, 3, 0, 11, 0, 100, 0, 0, 0, 0, 0, 0, 0, 142, 10, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Injured Northshire Guard - On Respawn - Set health to 10% - spawns injured'),
 (-7500315, 0, 4, 0, 60, 0, 100, 0, 1000, 1000, 1000, 1000, 0, 0, 142, 10, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Injured Northshire Guard - Update (every 1 s) - Pin health to 10%');
@@ -5192,3 +5192,59 @@ VALUES
 (22, 1, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - credit only while quest 1660057 is in progress'),
 (22, 2, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - ambush only while quest 1660057 is in progress'),
 (22, 3, 2300546, 1, 0, 47, 0, 1660057, 8, 0, 0, 0, 0, '', 'Mirror Shard - despawn only while quest 1660057 is in progress');
+
+-- ===== 2026-10-01 corrections ==============================================================
+-- Folded in after the fact; every item below was applied to the live world during the
+-- pre-merge test pass on 2026-10-01. All statements are idempotent and safe to re-apply.
+
+-- 537 Defias Trainee - the casting script restored, and the mana it was written for --------
+-- The seven rows were live-only (no SQL file ever carried them) and died in the
+-- 2026-09-27/28 file-based rebuilds; recovered verbatim from the surviving 09-27 world.
+-- The template has always been unit_class 1 (warrior -> rage, so no mana at all): Fireball
+-- costs 45 and the MANA_PCT event is guarded by GetMaxPower(POWER_MANA), which pinned the
+-- mob in its phase-1 hold forever. Class 8 (mage) gives 120 mana at level 1 and 147 at
+-- level 2 - 0.3 * 120 = 36 < 45, the value its own comment ("cannot pay 45") was written
+-- around. The port file's 537 INSERT still says unit_class = 1; this file sorts after it.
+UPDATE `creature_template` SET `unit_class` = 8 WHERE `entry` = 537;
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 537 AND `source_type` = 0;
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(537, 0, 0, 1, 25, 0, 100, 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - On Reset - Hold position'),
+(537, 0, 1, 0, 61, 0, 100, 0, 0, 0, 0, 0, 0, 0, 22, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - Linked - Clear event phase'),
+(537, 0, 2, 3, 4, 0, 100, 0, 0, 0, 0, 0, 0, 0, 22, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - On Aggro - Set phase 1 (cast)'),
+(537, 0, 3, 0, 61, 0, 100, 0, 0, 0, 0, 0, 0, 0, 21, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - Linked - Hold position in combat'),
+(537, 0, 4, 0, 9, 1, 100, 0, 0, 0, 3500, 4500, 0, 25, 11, 9488, 0, 0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - Phase 1: victim within 25 yd - Cast Fireball (9488)'),
+(537, 0, 5, 6, 3, 1, 100, 0, 0, 30, 1000, 1000, 0, 0, 22, 2, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - Phase 1: mana at or below 30% (cannot pay 45) - Set phase 2 (melee)'),
+(537, 0, 6, 0, 61, 0, 100, 0, 0, 0, 0, 0, 0, 0, 21, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 'Defias Trainee - Linked - Allow combat movement (close to melee)');
+
+-- 161701 Moroi Spada - speaks when quest 1660001 is accepted ---------------------------------
+-- Guard pattern: the entry copy is the durable record and the spawn copy is the one that
+-- fires (a spawn script replaces the entry script for its spawn). Event 19 = ACCEPTED_QUEST
+-- with the 20 s cooldown pair, action 1 talks creature_text group 0 (type 12 = monster say).
+DELETE FROM `smart_scripts` WHERE `entryorguid` = 161701 AND `source_type` = 0 AND `id` = 0 AND `link` = 0;
+DELETE FROM `smart_scripts` WHERE `entryorguid` = -7500240 AND `source_type` = 0 AND `id` = 0 AND `link` = 0;
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(161701, 0, 0, 0, 19, 0, 100, 0, 1660001, 20000, 20000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.000000, 0.000000, 0.000000, 0.000000, 'Moroi Spada - On quest 1660001 accepted - say his line'),
+(-7500240, 0, 0, 0, 19, 0, 100, 0, 1660001, 20000, 20000, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0.000000, 0.000000, 0.000000, 0.000000, 'Moroi Spada - On quest 1660001 accepted - say his line');
+
+UPDATE `creature_template` SET `AIName` = 'SmartAI' WHERE `entry` = 161701;
+
+DELETE FROM `creature_text` WHERE `CreatureID` = 161701 AND `GroupID` = 0 AND `ID` = 0;
+INSERT INTO `creature_text`
+  (`CreatureID`, `GroupID`, `ID`, `Text`, `Type`, `Language`, `Probability`, `Emote`,
+   `Duration`, `Sound`, `BroadcastTextId`) VALUES
+  (161701, 0, 0, 'Missing a page here... no, two. What a mess... Hard to focus with all that racket going on!', 12, 0, 100, 0, 0, 0, 0);
+
+-- Note: the Injured Northshire Guard's spawn-scoped accept row (-7500315 id 1) was edited in
+-- place above: its cooldown now matches its entry copy (161705 id 3) at 20 s, so a re-fired
+-- line cannot spam chat.
+
+-- 9003122 Gerald (class-trainer chain NPC at the north end of the river bridge) removed ------
+-- The spawn row comes from rev_20260923_06_coa_class_trainers_northshire.sql; the deletion
+-- itself was applied live-only and is recorded here so a rebuild cannot resurrect him.
+DELETE FROM `creature` WHERE `guid` = 9003122;
+DELETE FROM `creature_addon` WHERE `guid` = 9003122;
