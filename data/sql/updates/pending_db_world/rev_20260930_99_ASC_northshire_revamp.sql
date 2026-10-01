@@ -313,14 +313,15 @@ INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnMask`, `p
   (9000133, 161713, 0, 0, 0, 1, 1, 0, -8604.52, -569.947, 145.225, 1.85574, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', NULL, 0, NULL);
 
 -- ---------------------------------------------------------------------------------------------
--- entry 161715 - [KC] Purify Relics (4 spawns)
+-- entries 161880 / 161881 / 161882 / 161883 - [KC] Purify Relics markers (1 spawn each)
+-- One unique marker per relic: Journal 7500347, Staff 7500348, Idol 7500346, Jewel 7500345.
 -- ---------------------------------------------------------------------------------------------
 DELETE FROM `creature` WHERE `guid` IN (7500345, 7500346, 7500347, 7500348);
 INSERT INTO `creature` (`guid`, `id`, `map`, `zoneId`, `areaId`, `spawnMask`, `phaseMask`, `equipment_id`, `position_x`, `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`, `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`, `dynamicflags`, `ScriptName`, `VerifiedBuild`, `CreateObject`, `Comment`) VALUES
-  (7500345, 161715, 0, 0, 0, 1, 1, 0, -8658.67, -318.02, 53.73, 2.9164, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', 12340, 0, 'CoA - [KC] Purify Relics'),
-  (7500346, 161715, 0, 0, 0, 1, 1, 0, -8619.05, -278.12, 57.69, 2.2519, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', 12340, 0, 'CoA - [KC] Purify Relics'),
-  (7500347, 161715, 0, 0, 0, 1, 1, 0, -8575.71, -253.146, 53.7228, 2.8954, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', NULL, 0, NULL),
-  (7500348, 161715, 0, 0, 0, 1, 1, 0, -8638.85, -404.45, 54.72, 3.1877, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', 12340, 0, 'CoA - [KC] Purify Relics');
+  (7500345, 161883, 0, 0, 0, 1, 1, 0, -8658.67, -318.02, 53.73, 2.9164, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', 12340, 0, 'CoA - [KC] Purify Jewel marker'),
+  (7500346, 161882, 0, 0, 0, 1, 1, 0, -8619.05, -278.12, 57.69, 2.2519, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', 12340, 0, 'CoA - [KC] Purify Idol marker'),
+  (7500347, 161880, 0, 0, 0, 1, 1, 0, -8575.71, -253.146, 53.7228, 2.8954, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', NULL, 0, 'CoA - [KC] Purify Journal marker'),
+  (7500348, 161881, 0, 0, 0, 1, 1, 0, -8638.85, -404.45, 54.72, 3.1877, 120, 0, 0, 1, 0, 0, 0, 0, 0, '', 12340, 0, 'CoA - [KC] Purify Staff marker');
 
 -- ---------------------------------------------------------------------------------------------
 -- entry 161716 - Shadewell Murloc (16 spawns)
@@ -2266,8 +2267,8 @@ REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconN
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300505, 3, 300450, 'Lost Page IV', '', '', '', 1.00, 1689, 2300505, 0, 0, 0, 0, 0, 0, 1660001, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'worldforged_pickup', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300516, 3, 300450, 'Lost Page V', '', '', '', 1.00, 1689, 2300516, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'worldforged_pickup', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300517, 3, 300450, 'Lost Page VI', '', '', '', 1.00, 1689, 2300517, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 'worldforged_pickup', 12340);
-REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300520, 10, 1029136, 'Abbess’ Journal', '', '', '', 1.00, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
-REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300521, 10, 87111, 'Abbess’s Staff', '', '', '', 1.25, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300520, 10, 1029136, 'Abbess'' Journal', '', '', '', 1.00, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
+REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300521, 10, 87111, 'Abbess''s Staff', '', '', '', 1.25, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300522, 10, 63523, 'Heretical Idol Purified', '', '', '', 1.50, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300523, 10, 7075, 'Jewel', '', '', '', 0.75, 0, 1660003, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
 REPLACE INTO `gameobject_template` (`entry`, `type`, `displayId`, `name`, `IconName`, `castBarCaption`, `unk1`, `size`, `Data0`, `Data1`, `Data2`, `Data3`, `Data4`, `Data5`, `Data6`, `Data7`, `Data8`, `Data9`, `Data10`, `Data11`, `Data12`, `Data13`, `Data14`, `Data15`, `Data16`, `Data17`, `Data18`, `Data19`, `Data20`, `Data21`, `Data22`, `Data23`, `AIName`, `ScriptName`, `VerifiedBuild`) VALUES (2300565, 31, 8196, 'Doodad_InstanceNewPortal_Purple01', '', '', '', 1.75, 936, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', '', 12340);
@@ -3734,22 +3735,33 @@ SET @OGUID  := 7500128;
 -- Relic purification for quest 1660003 'Accursed Sisterhood' (Spada chain).
 --
 -- Design: clicking a relic makes the PLAYER cast Heartfelt Prayer (3 second cast)
--- and the matching objective completes only when that cast succeeds:
---   * The four relic gameobjects are GOOBERs with data1 = 1660003; data10 is the
---     GOOBER spell id and GameObject::Use casts it as the using player (the default
---     spell caster is the player, TRIGGERED_NONE = a real cast), gated by the object's
---     questId - so it only fires while the quest is INCOMPLETE and no scripts or
---     gossip are needed at all.
---   * Each relic drives its own Heartfelt Prayer variant (256701 / 256726 / 256728 /
---     365036 all exist in the client AND the server Spell.dbc), which lets the spell
---     itself carry the matching kill credit: the credit is applied by the spell when
---     the cast completes (Spell::DoAllEffectOnTarget), so moving or being interrupted
---     credits nothing.
+-- at a hidden [KC] marker unit standing on the relic, so the prayer and its
+-- glimmer play on the relic, and the matching objective completes only when that
+-- cast succeeds:
+--   * Every relic carries its own marker spawn on top of it. The four markers
+--     have unique creature entries (161880 Journal, 161881 Staff, 161882 Idol,
+--     161883 Jewel) - an earlier revision shared one entry (161715), and the
+--     closest-by-entry search could then pick a far copy of it, which the range
+--     check refused with "Out of range".
+--   * The relic is a GOOBER with data1 = 1660003 (quest gate) and data10 = 0;
+--     SmartGameObjectAI binds via AIName and its single row answers the plain use
+--     (event 64, param1 = 1 - the client also sends a report-use packet) with
+--     86 CROSS_CAST: the invoker (the player) casts the relic's own Heartfelt
+--     Prayer at the relic's marker, targeted by spawn id (SMART_TARGET_CREATURE_GUID,
+--     an exact lookup - not a search). The marker is always exactly where the
+--     relic is, so the cast's range check can never refuse it.
+--   * The spell's DUMMY lands on the marker - the prayer and its glimmer play
+--     there, on the relic - and the marker's own spawn-scoped row grants the
+--     kill credit from its spell hit: the credit is applied only when the cast
+--     completes (the dummy hit reaches the marker's SmartAI), so moving or being
+--     interrupted credits nothing.
 --   * spell_dbc REPLACES the whole DBC record, so every field the cast uses is
---     repeated here: 3000 ms cast (CastingTimeIndex 14), the original interrupt flags,
---     combat range 2, equipped item class -1, school, visual/icon, the 1.0 effect
---     multipliers and the 0xFF0FBE name/description locale masks. Strings stay empty -
---     the loader keeps the DBC text for empty SQL strings.
+--     repeated here: 3000 ms cast (CastingTimeIndex 14), the original interrupt
+--     flags, a 30 yard range (RangeIndex 4), equipped item class -1, school,
+--     visual/icon, the 1.0 effect multipliers and the 0xFF0FBE name/description
+--     locale masks. Strings stay empty - the loader keeps the DBC text for empty
+--     SQL strings. The DUMMY keeps effect target 25 (unit target any) so the only
+--     hit target is the marker the cast was aimed at.
 --   * Kill credits: 256701 Journal -> 161715, 256726 Staff -> 161824, 256728 Idol ->
 --     161825, 365036 Jewel -> 161826 (the invisible [KC] templates of quest 1660003;
 --     SPELL_EFFECT_KILL_CREDIT 134 = RewardPlayerAndGroupAtEvent).
@@ -3758,26 +3770,82 @@ SET @OGUID  := 7500128;
 --     the player who credited its objective (type 30 OBJECT_VISIBILITY conditions);
 --     those rows are removed and only cleaned up below.
 --
--- Activation: worldserver RESTART - gameobject_template and the DBC stores (spell_dbc)
--- load at startup and have no reload command.
--- Idempotent: template updates + delete/reinsert of the objects' scripts and rows.
+-- Activation: worldserver RESTART - gameobject_template, creature_template and the
+-- DBC stores (spell_dbc) load at startup and have no reload command.
+-- Idempotent: template updates + delete/reinsert of the objects' scripts, rows and
+-- conditions.
 
-UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256701 WHERE `entry` = 2300520;
-UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256726 WHERE `entry` = 2300521;
-UPDATE `gameobject_template` SET `AIName` = '', `data10` = 256728 WHERE `entry` = 2300522;
-UPDATE `gameobject_template` SET `AIName` = '', `data10` = 365036 WHERE `entry` = 2300523;
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `data10` = 0 WHERE `entry` = 2300520;
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `data10` = 0 WHERE `entry` = 2300521;
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `data10` = 0 WHERE `entry` = 2300522;
+UPDATE `gameobject_template` SET `AIName` = 'SmartGameObjectAI', `ScriptName` = '', `data10` = 0 WHERE `entry` = 2300523;
 
 DELETE FROM `smart_scripts` WHERE `entryorguid` IN (2300520, 2300521, 2300522, 2300523) AND `source_type` = 1;
+
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(2300520, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 86, 256701, 0, 7, 0, 0, 0, 10, 7500347, 161880, 0, 0, 0, 0, 0, 0, 'Abbess Journal - plain use: Heartfelt Prayer cast at its marker 161880'),
+(2300521, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 86, 256726, 0, 7, 0, 0, 0, 10, 7500348, 161881, 0, 0, 0, 0, 0, 0, 'Abbess Staff - plain use: Heartfelt Prayer cast at its marker 161881'),
+(2300522, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 86, 256728, 0, 7, 0, 0, 0, 10, 7500346, 161882, 0, 0, 0, 0, 0, 0, 'Heretical Idol - plain use: Heartfelt Prayer cast at its marker 161882'),
+(2300523, 1, 0, 0, 64, 0, 100, 0, 1, 0, 0, 0, 0, 0, 86, 365036, 0, 7, 0, 0, 0, 10, 7500345, 161883, 0, 0, 0, 0, 0, 0, 'Jewel - plain use: Heartfelt Prayer cast at its marker 161883');
 
 DELETE FROM `spell_dbc` WHERE `Id` IN (256701, 256726, 256728, 365036);
 
 INSERT INTO `spell_dbc`
 (`Id`, `AttributesEx`, `AttributesEx2`, `CastingTimeIndex`, `InterruptFlags`, `ProcChance`, `DurationIndex`, `RangeIndex`, `EquippedItemClass`, `Effect_1`, `EffectBasePoints_1`, `ImplicitTargetA_1`, `EffectMiscValue_1`, `EffectBonusMultiplier_1`, `EffectBonusMultiplier_2`, `EffectBonusMultiplier_3`, `SpellVisualID_1`, `SpellIconID`, `SchoolMask`, `Name_Lang_Mask`, `NameSubtext_Lang_Mask`, `Description_Lang_Mask`, `AuraDescription_Lang_Mask`)
 VALUES
-(256701, 0, 4, 14, 63, 101, 0, 2, -1, 134, 1, 1, 161715, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
-(256726, 0, 4, 14, 47, 101, 0, 2, -1, 134, 1, 1, 161824, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
-(256728, 0, 4, 14, 47, 101, 0, 2, -1, 134, 1, 1, 161825, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
-(365036, 268435456, 4, 14, 63, 101, 6, 2, -1, 134, 1, 1, 161826, 1, 1, 1, 364270, 300, 1, 16712190, 16712190, 16712190, 16712190);
+(256701, 0, 4, 14, 63, 101, 0, 4, -1, 3, 1, 25, 0, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
+(256726, 0, 4, 14, 47, 101, 0, 4, -1, 3, 1, 25, 0, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
+(256728, 0, 4, 14, 47, 101, 0, 4, -1, 3, 1, 25, 0, 1, 1, 1, 278474, 300, 1, 16712190, 16712190, 16712190, 16712190),
+(365036, 268435456, 4, 14, 63, 101, 6, 4, -1, 3, 1, 25, 0, 1, 1, 1, 364270, 300, 1, 16712190, 16712190, 16712190, 16712190);
+
+-- The four marker templates: one unique creature per relic, cloned from 161715
+-- '[KC] Purify Relics' (level 1, faction 35, invisible stalker 11686, not selectable).
+-- AIName 'SmartAI' lets each marker answer the prayer's hit with its relic's credit.
+
+INSERT INTO `creature_template` (`entry`, `difficulty_entry_1`, `difficulty_entry_2`, `difficulty_entry_3`, `KillCredit1`, `KillCredit2`, `name`, `subname`, `IconName`, `gossip_menu_id`, `minlevel`, `maxlevel`, `exp`, `faction`, `npcflag`, `speed_walk`, `speed_run`, `speed_swim`, `speed_flight`, `detection_range`, `rank`, `dmgschool`, `DamageModifier`, `BaseAttackTime`, `RangeAttackTime`, `BaseVariance`, `RangeVariance`, `unit_class`, `unit_flags`, `unit_flags2`, `dynamicflags`, `family`, `type`, `type_flags`, `lootid`, `pickpocketloot`, `skinloot`, `PetSpellDataId`, `VehicleId`, `mingold`, `maxgold`, `AIName`, `MovementType`, `HoverHeight`, `HealthModifier`, `ManaModifier`, `ArmorModifier`, `ExperienceModifier`, `RacialLeader`, `movementId`, `RegenHealth`, `CreatureImmunitiesId`, `flags_extra`, `ScriptName`, `VerifiedBuild`) VALUES
+(161880, 0, 0, 0, 0, 0, '[KC] Purify Journal', '', NULL, 0, 1, 1, 0, 35, 0, 1, 1.14286, 1, 1, 20, 0, 0, 1, 2000, 0, 1, 1, 1, 33554432, 0, 256, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'SmartAI', 0, 1, 1, 1, 1, 1, 0, 999, 1, 0, 0, '', 12340),
+(161881, 0, 0, 0, 0, 0, '[KC] Purify Staff', '', NULL, 0, 1, 1, 0, 35, 0, 1, 1.14286, 1, 1, 20, 0, 0, 1, 2000, 0, 1, 1, 1, 33554432, 0, 256, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'SmartAI', 0, 1, 1, 1, 1, 1, 0, 999, 1, 0, 0, '', 12340),
+(161882, 0, 0, 0, 0, 0, '[KC] Purify Idol', '', NULL, 0, 1, 1, 0, 35, 0, 1, 1.14286, 1, 1, 20, 0, 0, 1, 2000, 0, 1, 1, 1, 33554432, 0, 256, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'SmartAI', 0, 1, 1, 1, 1, 1, 0, 999, 1, 0, 0, '', 12340),
+(161883, 0, 0, 0, 0, 0, '[KC] Purify Jewel', '', NULL, 0, 1, 1, 0, 35, 0, 1, 1.14286, 1, 1, 20, 0, 0, 1, 2000, 0, 1, 1, 1, 33554432, 0, 256, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'SmartAI', 0, 1, 1, 1, 1, 1, 0, 999, 1, 0, 0, '', 12340) ON DUPLICATE KEY UPDATE `name` = VALUES(`name`), `minlevel` = VALUES(`minlevel`), `maxlevel` = VALUES(`maxlevel`), `faction` = VALUES(`faction`), `unit_class` = VALUES(`unit_class`), `unit_flags` = VALUES(`unit_flags`), `dynamicflags` = VALUES(`dynamicflags`), `type` = VALUES(`type`), `AIName` = VALUES(`AIName`), `flags_extra` = VALUES(`flags_extra`);
+
+DELETE FROM `creature_template_model` WHERE `CreatureID` IN (161880, 161881, 161882, 161883);
+
+INSERT INTO `creature_template_model` (`CreatureID`, `Idx`, `CreatureDisplayID`, `DisplayScale`, `Probability`, `VerifiedBuild`) VALUES
+(161880, 0, 11686, 1.0000, 1.00, 12340),
+(161881, 0, 11686, 1.0000, 1.00, 12340),
+(161882, 0, 11686, 1.0000, 1.00, 12340),
+(161883, 0, 11686, 1.0000, 1.00, 12340) ON DUPLICATE KEY UPDATE `CreatureDisplayID` = VALUES(`CreatureDisplayID`), `DisplayScale` = VALUES(`DisplayScale`), `Probability` = VALUES(`Probability`);
+
+-- The prayer lands on the marker, so the marker grants the credit from its own
+-- spell hit. One spawn-scoped row per marker (7500347 Journal, 7500348 Staff,
+-- 7500346 Idol, 7500345 Jewel).
+
+UPDATE `creature_template` SET `AIName` = '' WHERE `entry` = 161715;
+
+DELETE FROM `smart_scripts` WHERE `entryorguid` IN (-7500345, -7500346, -7500347, -7500348) AND `source_type` = 0;
+
+INSERT INTO `smart_scripts`
+(`entryorguid`, `source_type`, `id`, `link`, `event_type`, `event_phase_mask`, `event_chance`, `event_flags`, `event_param1`, `event_param2`, `event_param3`, `event_param4`, `event_param5`, `event_param6`, `action_type`, `action_param1`, `action_param2`, `action_param3`, `action_param4`, `action_param5`, `action_param6`, `target_type`, `target_param1`, `target_param2`, `target_param3`, `target_param4`, `target_x`, `target_y`, `target_z`, `target_o`, `comment`)
+VALUES
+(-7500347, 0, 0, 0, 8, 0, 100, 0, 256701, 0, 0, 0, 0, 0, 33, 161715, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Journal marker 161880 - Heartfelt Prayer hit: credit 161715'),
+(-7500348, 0, 0, 0, 8, 0, 100, 0, 256726, 0, 0, 0, 0, 0, 33, 161824, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Staff marker 161881 - Heartfelt Prayer hit: credit 161824'),
+(-7500346, 0, 0, 0, 8, 0, 100, 0, 256728, 0, 0, 0, 0, 0, 33, 161825, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Idol marker 161882 - Heartfelt Prayer hit: credit 161825'),
+(-7500345, 0, 0, 0, 8, 0, 100, 0, 365036, 0, 0, 0, 0, 0, 33, 161826, 0, 0, 0, 0, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 'Jewel marker 161883 - Heartfelt Prayer hit: credit 161826');
+
+-- The conditions gate the click cast to an in-progress 1660003 (the relics cast
+-- nothing themselves - data10 is 0 - and the marker credit needs the cast).
+
+DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 22 AND `SourceEntry` IN (2300520, 2300521, 2300522, 2300523) AND `SourceId` = 1;
+
+INSERT INTO `conditions`
+(`SourceTypeOrReferenceId`, `SourceGroup`, `SourceEntry`, `SourceId`, `ElseGroup`, `ConditionTypeOrReference`, `ConditionTarget`, `ConditionValue1`, `ConditionValue2`, `ConditionValue3`, `NegativeCondition`, `ErrorType`, `ErrorTextId`, `ScriptName`, `Comment`)
+VALUES
+(22, 1, 2300520, 1, 0, 47, 0, 1660003, 8, 0, 0, 0, 0, '', 'Abbess Journal - the prayer only casts while quest 1660003 is in progress'),
+(22, 1, 2300521, 1, 0, 47, 0, 1660003, 8, 0, 0, 0, 0, '', 'Abbess Staff - the prayer only casts while quest 1660003 is in progress'),
+(22, 1, 2300522, 1, 0, 47, 0, 1660003, 8, 0, 0, 0, 0, '', 'Heretical Idol - the prayer only casts while quest 1660003 is in progress'),
+(22, 1, 2300523, 1, 0, 47, 0, 1660003, 8, 0, 0, 0, 0, '', 'Jewel - the prayer only casts while quest 1660003 is in progress');
 
 -- Permanence: no visibility conditions - a relic stays in the world for every player
 -- after it has been prayed at. The delete clears the hide rows an earlier revision
@@ -3793,8 +3861,8 @@ DELETE FROM `conditions` WHERE `SourceTypeOrReferenceId` = 30 AND `SourceGroup` 
 -- the click runs the 3 second cast and only the completed cast reaches the handler,
 -- which credits 162940, rolls the 75% ambush at the warren and despawns it - an
 -- interrupted cast leaves everything unchanged. The handler binding covers the warren's
--- and the shard's spells alone; the sisterhood relics keep their data10 credits, and
--- 267031 keeps the native DUMMY effect the handler listens for.
+-- and the shard's spells alone; the sisterhood relics keep their own click cast and
+-- credit rows, and 267031 keeps the native DUMMY effect the handler listens for.
 
 DELETE FROM `spell_script_names` WHERE `ScriptName` = 'spell_coa_abbess_relic_prayer';
 
@@ -3927,7 +3995,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO `quest_template`
 (`ID`, `QuestType`, `QuestLevel`, `MinLevel`, `QuestSortID`, `QuestInfoID`, `SuggestedGroupNum`, `RewardXPDifficulty`, `RewardMoney`, `RewardMoneyDifficulty`, `StartItem`, `Flags`, `RewardItem1`, `RewardAmount1`, `RewardChoiceItemID1`, `RewardChoiceItemQuantity1`, `RewardChoiceItemID2`, `RewardChoiceItemQuantity2`, `RewardChoiceItemID3`, `RewardChoiceItemQuantity3`, `RewardChoiceItemID4`, `RewardChoiceItemQuantity4`, `RewardChoiceItemID5`, `RewardChoiceItemQuantity5`, `RewardChoiceItemID6`, `RewardChoiceItemQuantity6`, `RewardFactionID1`, `RewardFactionValue1`, `RewardFactionOverride1`, `LogTitle`, `LogDescription`, `QuestDescription`, `AreaDescription`, `QuestCompletionLog`, `RequiredNpcOrGo1`, `RequiredNpcOrGo2`, `RequiredNpcOrGo3`, `RequiredNpcOrGo4`, `RequiredNpcOrGoCount1`, `RequiredNpcOrGoCount2`, `RequiredNpcOrGoCount3`, `RequiredNpcOrGoCount4`, `RequiredItemId1`, `RequiredItemId2`, `RequiredItemId3`, `RequiredItemId4`, `RequiredItemId5`, `RequiredItemId6`, `RequiredItemCount1`, `RequiredItemCount2`, `RequiredItemCount3`, `RequiredItemCount4`, `RequiredItemCount5`, `RequiredItemCount6`, `ObjectiveText1`, `ObjectiveText2`, `ObjectiveText3`, `ObjectiveText4`, `VerifiedBuild`)
 VALUES
-(1660003, 2, 6, 3, 9, 0, 0, 5, 0, 0, 0, 8, 5571, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Accursed Sisterhood', 'Purify the belongings of the former abbess, scattered throughout the Secret Inquisitorial Dungeon.', 'The way is shut. The abbess cursed those who judged her, binding them to wander as restless spirits.$b$bThose who died are still chained by her power. The dignity and belongings they stripped from her became shackles. A simple prayer. A sincere plea. That would be enough...$b$bThey’ll find no rest until someone purifies the abbess’s relics, scattered throughout the dungeon.$b$bBut the Dead guard them well. And so, the way remains shut.', '', 'Speak with Sister Alma.', 161715, 161824, 161825, 161826, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Abbess’ Journal Purified', 'Abbess’s Staff Purified', 'Heretical Idol Purified', 'Jewel Purified', NULL)
+(1660003, 2, 6, 3, 9, 0, 0, 5, 0, 0, 0, 8, 5571, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Accursed Sisterhood', 'Purify the belongings of the former abbess, scattered throughout the Secret Inquisitorial Dungeon.', 'The way is shut. The abbess cursed those who judged her, binding them to wander as restless spirits.$b$bThose who died are still chained by her power. The dignity and belongings they stripped from her became shackles. A simple prayer. A sincere plea. That would be enough...$b$bThey’ll find no rest until someone purifies the abbess’s relics, scattered throughout the dungeon.$b$bBut the Dead guard them well. And so, the way remains shut.', '', 'Speak with Sister Alma.', 161715, 161824, 161825, 161826, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'Abbess'' Journal Purified', 'Abbess''s Staff Purified', 'Heretical Idol Purified', 'Jewel Purified', NULL)
 ON DUPLICATE KEY UPDATE
 `QuestType` = VALUES(`QuestType`), `QuestLevel` = VALUES(`QuestLevel`), `MinLevel` = VALUES(`MinLevel`), `QuestSortID` = VALUES(`QuestSortID`), `QuestInfoID` = VALUES(`QuestInfoID`), `SuggestedGroupNum` = VALUES(`SuggestedGroupNum`), `RewardXPDifficulty` = VALUES(`RewardXPDifficulty`), `RewardMoney` = VALUES(`RewardMoney`), `RewardMoneyDifficulty` = VALUES(`RewardMoneyDifficulty`), `StartItem` = VALUES(`StartItem`), `Flags` = VALUES(`Flags`), `RewardItem1` = VALUES(`RewardItem1`), `RewardAmount1` = VALUES(`RewardAmount1`), `RewardChoiceItemID1` = VALUES(`RewardChoiceItemID1`), `RewardChoiceItemQuantity1` = VALUES(`RewardChoiceItemQuantity1`), `RewardChoiceItemID2` = VALUES(`RewardChoiceItemID2`), `RewardChoiceItemQuantity2` = VALUES(`RewardChoiceItemQuantity2`), `RewardChoiceItemID3` = VALUES(`RewardChoiceItemID3`), `RewardChoiceItemQuantity3` = VALUES(`RewardChoiceItemQuantity3`), `RewardChoiceItemID4` = VALUES(`RewardChoiceItemID4`), `RewardChoiceItemQuantity4` = VALUES(`RewardChoiceItemQuantity4`), `RewardChoiceItemID5` = VALUES(`RewardChoiceItemID5`), `RewardChoiceItemQuantity5` = VALUES(`RewardChoiceItemQuantity5`), `RewardChoiceItemID6` = VALUES(`RewardChoiceItemID6`), `RewardChoiceItemQuantity6` = VALUES(`RewardChoiceItemQuantity6`), `RewardFactionID1` = VALUES(`RewardFactionID1`), `RewardFactionValue1` = VALUES(`RewardFactionValue1`), `RewardFactionOverride1` = VALUES(`RewardFactionOverride1`), `LogTitle` = VALUES(`LogTitle`), `LogDescription` = VALUES(`LogDescription`), `QuestDescription` = VALUES(`QuestDescription`), `AreaDescription` = VALUES(`AreaDescription`), `QuestCompletionLog` = VALUES(`QuestCompletionLog`), `RequiredNpcOrGo1` = VALUES(`RequiredNpcOrGo1`), `RequiredNpcOrGo2` = VALUES(`RequiredNpcOrGo2`), `RequiredNpcOrGo3` = VALUES(`RequiredNpcOrGo3`), `RequiredNpcOrGo4` = VALUES(`RequiredNpcOrGo4`), `RequiredNpcOrGoCount1` = VALUES(`RequiredNpcOrGoCount1`), `RequiredNpcOrGoCount2` = VALUES(`RequiredNpcOrGoCount2`), `RequiredNpcOrGoCount3` = VALUES(`RequiredNpcOrGoCount3`), `RequiredNpcOrGoCount4` = VALUES(`RequiredNpcOrGoCount4`), `RequiredItemId1` = VALUES(`RequiredItemId1`), `RequiredItemId2` = VALUES(`RequiredItemId2`), `RequiredItemId3` = VALUES(`RequiredItemId3`), `RequiredItemId4` = VALUES(`RequiredItemId4`), `RequiredItemId5` = VALUES(`RequiredItemId5`), `RequiredItemId6` = VALUES(`RequiredItemId6`), `RequiredItemCount1` = VALUES(`RequiredItemCount1`), `RequiredItemCount2` = VALUES(`RequiredItemCount2`), `RequiredItemCount3` = VALUES(`RequiredItemCount3`), `RequiredItemCount4` = VALUES(`RequiredItemCount4`), `RequiredItemCount5` = VALUES(`RequiredItemCount5`), `RequiredItemCount6` = VALUES(`RequiredItemCount6`), `ObjectiveText1` = VALUES(`ObjectiveText1`), `ObjectiveText2` = VALUES(`ObjectiveText2`), `ObjectiveText3` = VALUES(`ObjectiveText3`), `ObjectiveText4` = VALUES(`ObjectiveText4`), `VerifiedBuild` = VALUES(`VerifiedBuild`);
 
@@ -4866,7 +4934,8 @@ UPDATE `gameobject` SET `orientation` = 1.31188, `rotation2` = 0.609903, `rotati
 UPDATE `gameobject` SET `rotation2` = 0.9568, `VerifiedBuild` = NULL, `Comment` = NULL WHERE `guid` = 7500211;
 UPDATE `gameobject` SET `VerifiedBuild` = NULL, `Comment` = NULL WHERE `guid` = 7500212;
 
--- Spawn corrections: stray spawns removed; relic marker and Journal re-stated.
+-- Spawn corrections: stray spawns removed; the Staff relic marker (now the unique [KC]
+-- 161881) and the Journal re-stated.
 SET @CGUID := 80131;
 SET @OGUID := 7500165;
 
@@ -4878,7 +4947,7 @@ INSERT INTO `creature`
    `position_y`, `position_z`, `orientation`, `spawntimesecs`, `wander_distance`,
    `currentwaypoint`, `curhealth`, `curmana`, `MovementType`, `npcflag`, `unit_flags`,
    `dynamicflags`) VALUES
-  (@CGUID+7420217, 161715, 0, 1, 1, 0, -8638.850000, -404.450000, 54.720000, 3.187700, 120,
+  (@CGUID+7420217, 161881, 0, 1, 1, 0, -8638.850000, -404.450000, 54.720000, 3.187700, 120,
    0.000000, 0, 1, 0, 0, 0, 0, 0);
 
 -- 80152's script rows go with the spawn; group 8015200 is called only by -80152.
