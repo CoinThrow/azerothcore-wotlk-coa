@@ -164,8 +164,10 @@ constexpr uint16 SMSG_PATCH_VANITY_COLLECTION = 0x0573;
 constexpr uint16 SMSG_UPDATE_OBJECT_ADDON = 0x0578;
 constexpr uint32 PLAYER_ADDON_FIELD_AVERAGE_ITEM_LEVEL = 5;
 
+constexpr uint16 SMSG_CHARACTER_CUSTOMIZATION_UNLOCKS = 0x09D0;
 constexpr uint16 SMSG_REALM_INFO = 0x09BC;
 constexpr uint16 SMSG_ASCENSION_SECURE_ADDONS = 0x094E;
+constexpr uint16 SMSG_CHAT_INFRACTION = 0x06E5;
 constexpr uint8 REALM_CREATION_FLAG_CONQUEST_OF_AZEROTH = 6;
 constexpr uint8 REALM_CREATION_FLAG_WARCRAFT_REBORN = 7;
 constexpr uint8 REALM_INFO_ADDONS_ALLOWED = 1;
@@ -4365,6 +4367,24 @@ public:
              who, art, model, realm.Id.Realm, realm.Name);
   }
 
+  void SendCharacterCustomizationUnlocks(WorldSession *session) {
+    if (!session)
+      return;
+
+    WorldPacket p(SMSG_CHARACTER_CUSTOMIZATION_UNLOCKS, sizeof(uint32));
+    p << static_cast<uint32>(0);
+    session->SendPacket(&p);
+  }
+
+  void SendChatInfraction(WorldSession *session) {
+    if (!session)
+      return;
+
+    WorldPacket p(SMSG_CHAT_INFRACTION, 2 * sizeof(uint32) + 1);
+    p << static_cast<uint32>(0) << "" << static_cast<uint32>(0);
+    session->SendPacket(&p);
+  }
+
   void SendGameModeState(Player *player) {
     if (!player || !player->GetSession())
       return;
@@ -5027,7 +5047,9 @@ public:
     {
       SendAscensionCharacterListInfo(session);
       AscensionCollectionService& service = AscensionCollectionService::Instance();
+      service.SendCharacterCustomizationUnlocks(session);
       service.SendRealmInfo(session);
+      service.SendChatInfraction(session);
       service.SendSecureAddonList(session);
     }
 

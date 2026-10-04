@@ -70,6 +70,12 @@ def main():
         ('QUEUE_LIMIT', constant(compat, 'MAX_QUEUED_EXTENSION_PACKETS')),
         ('CONFIG_KEYS', method(compat, 'enum class AscensionCompatConfig') + ';'),
         ('SEND_REALM_INFO', method(compat, 'void SendRealmInfo(WorldSession *session')),
+        ('SEND_CHARACTER_CUSTOMIZATION_UNLOCKS', method_or(
+            compat, 'void SendCharacterCustomizationUnlocks(WorldSession *session)',
+            'void SendCharacterCustomizationUnlocks(WorldSession*) { }')),
+        ('SEND_CHAT_INFRACTION', method_or(
+            compat, 'void SendChatInfraction(WorldSession *session)',
+            'void SendChatInfraction(WorldSession*) { }')),
         ('SEND_GAME_MODE_STATE', method_or(compat, 'void SendGameModeState(Player *player)',
                                            'void SendGameModeState(Player*) { }')),
         ('SEND_SECURE_ADDON_LIST', method_or(compat, 'void SendSecureAddonList(WorldSession* session)', '')),

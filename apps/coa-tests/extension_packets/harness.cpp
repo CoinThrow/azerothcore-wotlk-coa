@@ -381,6 +381,8 @@ public:
     void RefreshCosmetics(Player*, PlayerCollectionState&) { }
 
     // ACTUAL_SEND_REALM_INFO
+    // ACTUAL_SEND_CHARACTER_CUSTOMIZATION_UNLOCKS
+    // ACTUAL_SEND_CHAT_INFRACTION
     // ACTUAL_SEND_GAME_MODE_STATE
     // ACTUAL_SEND_SECURE_ADDON_LIST
     // ACTUAL_QUEUE_CLIENT_PACKET
@@ -520,13 +522,31 @@ bool TrustsHelpUi(WorldPacket packet)
         packet.read<uint8>() == 1 && packet.rpos() == packet.size();
 }
 
+bool CarriesCustomizationUnlocks(WorldPacket packet)
+{
+    return packet.GetOpcode() == 0x09D0 && packet.size() == sizeof(uint32) &&
+        packet.read<uint32>(0) == 0;
+}
+
+bool CarriesChatInfraction(WorldPacket packet)
+{
+    if (packet.GetOpcode() != 0x06E5 || packet.size() != 2 * sizeof(uint32) + 1)
+        return false;
+
+    packet.rpos(0);
+    return packet.read<uint32>() == 0 && ReadString(packet).empty() &&
+        packet.read<uint32>() == 0 && packet.rpos() == packet.size();
+}
+
 void TestCharacterEnumeration()
 {
     WorldSession session;
     bool const passedOn = Receive(session, WorldPacket(CMSG_CHAR_ENUM, 0));
     Check(passedOn, "character enumeration still reaches the core handler");
-    Check(session.Sent.size() == 2 && session.Sent[0].GetOpcode() == 0x09BC && TrustsHelpUi(session.Sent[1]),
-        "character enumeration sends realm info followed by the secure HelpUI addon list");
+    Check(session.Sent.size() == 4 && CarriesCustomizationUnlocks(session.Sent[0]) &&
+            session.Sent[1].GetOpcode() == 0x09BC && CarriesChatInfraction(session.Sent[2]) &&
+            TrustsHelpUi(session.Sent[3]),
+        "character enumeration sends the customization unlocks, realm info, chat infraction and the HelpUI list");
 }
 
 WorldPacket ApplyAppearances()
