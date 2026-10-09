@@ -24,6 +24,7 @@
 */
 
 #include "AppenderDB.h"
+#include "AscensionAuth.h"
 #include "AuthSocketMgr.h"
 #include "Banner.h"
 #include "Config.h"
@@ -55,6 +56,12 @@
 #define _ACORE_REALM_CONFIG "authserver.conf"
 #endif
 
+// Module config files the auth server reads: the CoA options (including the Ascension
+// custom-auth key set in coa.conf) apply to authentication as well as to the world.
+#ifndef _ACORE_AUTH_MODULE_CONFIGS
+#define _ACORE_AUTH_MODULE_CONFIGS "coa.conf,"
+#endif
+
 using boost::asio::ip::tcp;
 using namespace boost::program_options;
 namespace fs = std::filesystem;
@@ -81,7 +88,8 @@ int main(int argc, char** argv)
         return 0;
 
     // Add file and args in config
-    sConfigMgr->Configure(configFile.generic_string(), std::vector<std::string>(argv, argv + argc));
+    sConfigMgr->Configure(configFile.generic_string(), std::vector<std::string>(argv, argv + argc),
+        _ACORE_AUTH_MODULE_CONFIGS);
 
     if (!sConfigMgr->LoadAppConfigs())
         return 1;
@@ -101,6 +109,14 @@ int main(int argc, char** argv)
             LOG_INFO("server.authserver", "> Using SSL version:             {} (library: {})", OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
             LOG_INFO("server.authserver", "> Using Boost version:           {}.{}.{}", BOOST_VERSION / 100000, BOOST_VERSION / 100 % 1000, BOOST_VERSION % 100);
         });
+
+    // Load the module configs (coa.conf carries the CoA.* options, including the Ascension
+    // custom-auth key set) - mirrors the world server's startup.
+    sConfigMgr->LoadModulesConfigs();
+
+    // Initialise the Ascension custom-auth key set early: its public key is logged here (the
+    // client's KC1 must match it) and a bad configuration surfaces at startup.
+    CoA::AscensionAuth::IsEnabled();
 
     OpenSSLCrypto::threadsSetup();
 

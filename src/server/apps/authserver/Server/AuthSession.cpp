@@ -27,6 +27,7 @@
 #include "Log.h"
 #include "RealmCard.h"
 #include "RealmList.h"
+#include "AscensionAuth.h"
 #include "SecretMgr.h"
 #include "StringConvert.h"
 #include "TOTP.h"
@@ -121,11 +122,16 @@ std::array<uint8, 16> VersionChallenge = { { 0xBA, 0xA3, 0x1E, 0x99, 0xA0, 0x0B,
 #define REALM_LIST_PACKET_SIZE 5
 
 uint8 constexpr ASCENSION_AUTH_MARKER = 0x08;
-uint16 constexpr ASCENSION_AUTH_CHALLENGE_SIZE = 0x0276;
+// The challenge's own size field is not fixed: observed 0x0276 with a 5-character password
+// (2026-10-01) and 0x0278 with the 7-character "copilot" (2026-10-04), i.e. size = 625 +
+// password length, so accept a range instead of a single value.
+uint16 constexpr ASCENSION_AUTH_CHALLENGE_MIN_SIZE = 0x0260;
+uint16 constexpr ASCENSION_AUTH_CHALLENGE_MAX_SIZE = 0x02C0;
 
 bool IsAscensionAuthChallenge(sAuthLogonChallenge_C const* challenge)
 {
-    return challenge->error == ASCENSION_AUTH_MARKER && challenge->size == ASCENSION_AUTH_CHALLENGE_SIZE;
+    return challenge->error == ASCENSION_AUTH_MARKER &&
+        challenge->size >= ASCENSION_AUTH_CHALLENGE_MIN_SIZE && challenge->size <= ASCENSION_AUTH_CHALLENGE_MAX_SIZE;
 }
 
 template <typename Container>
@@ -238,7 +244,7 @@ SocketReadCallbackResult AuthSession::ReadHandler()
 
     if (!_loggedInitialPacket && packet.GetActiveSize())
     {
-        std::size_t const captureSize = std::min<std::size_t>(packet.GetActiveSize(), 64);
+        std::size_t const captureSize = std::min<std::size_t>(packet.GetActiveSize(), 2048);
         LOG_TRACE("session", "Received {} initial auth bytes: {}", packet.GetActiveSize(),
             Acore::Impl::ByteArrayToHexStr(packet.GetReadPointer(), captureSize));
         _loggedInitialPacket = true;
@@ -312,11 +318,33 @@ bool AuthSession::HandleLogonChallenge()
     std::string login;
     if (IsAscensionAuthChallenge(challenge))
     {
-        login = "LOCAL";
+        // The official client sends an X25519 + ChaCha20 wrapped hello. Parse it, derive the
+        // session keys from the configured key set and decrypt the password; the account and
+        // password are checked once the challenge query comes back.
+        if (!CoA::AscensionAuth::IsEnabled())
+        {
+            LOG_INFO("server.authserver", "Ascension custom auth hello rejected (CoA.AscensionAuth is disabled)");
+            return false;
+        }
+
+        CoA::AscensionAuth::Hello hello = CoA::AscensionAuth::ParseHello(
+            GetReadBuffer().GetReadPointer(), GetReadBuffer().GetActiveSize(), CoA::AscensionAuth::GetKeySet());
+        if (!hello.Valid)
+        {
+            LOG_INFO("server.authserver", "Ascension custom auth hello could not be parsed");
+            return false;
+        }
+
+        login = hello.Login;
+        Utf8ToUpperOnlyLatin(login);
+        _ascensionKeyDerived = hello.KeyDerived;
+        _ascensionKeySession = hello.KeySession;
+        _ascensionPassword = hello.Password;
+        _isAscensionClient = true;
         _build = 12340;
         _os = "Win";
         _localizationName = "enUS";
-        LOG_INFO("server.authserver", "Accepted Ascension encrypted auth challenge for local account");
+        LOG_INFO("server.authserver", "Ascension custom auth hello for '{}' ({} password bytes, key derived)", login, hello.Password.size());
     }
     else
     {
@@ -337,8 +365,6 @@ bool AuthSession::HandleLogonChallenge()
         for (int i = 0; i < 4; ++i)
             _localizationName[i] = challenge->country[4 - i - 1];
     }
-
-    _isAscensionLocalClient = challenge->error == ASCENSION_AUTH_MARKER && login == "LOCAL";
 
     LOG_DEBUG("server.authserver", "[AuthChallenge] '{}'", login);
 
@@ -448,6 +474,31 @@ void AuthSession::LogonChallengeCallback(PreparedQueryResult result)
         fields[13].Get<Binary, Acore::Crypto::SRP6::SALT_LENGTH>(),
         fields[14].Get<Binary, Acore::Crypto::SRP6::VERIFIER_LENGTH>());
 
+    // Ascension custom auth: the password arrived (encrypted) inside the hello and the proof
+    // packet carries no verifiable SRP6 response, so check the password against the stored
+    // verifier here, before the challenge goes out.
+    if (_isAscensionClient)
+    {
+        std::string login = _accountInfo.Login;
+        std::string password = _ascensionPassword;
+        Utf8ToUpperOnlyLatin(login);
+        Utf8ToUpperOnlyLatin(password);
+        bool const passwordOk = Acore::Crypto::SRP6::CheckLogin(login, password,
+            fields[13].Get<Binary, Acore::Crypto::SRP6::SALT_LENGTH>(),
+            fields[14].Get<Binary, Acore::Crypto::SRP6::VERIFIER_LENGTH>());
+        _ascensionPassword.clear();
+
+        if (!passwordOk)
+        {
+            pkt << uint8(WOW_FAIL_UNKNOWN_ACCOUNT);
+            SendPacket(pkt);
+            LOG_INFO("server.authserver", "Ascension custom auth: wrong password for account '{}'", _accountInfo.Login);
+            return;
+        }
+
+        LOG_INFO("server.authserver", "Ascension custom auth: password accepted for account '{}'", _accountInfo.Login);
+    }
+
     // Fill the response packet with the result
     if (AuthHelper::IsAcceptedClientBuild(_build))
     {
@@ -488,6 +539,17 @@ void AuthSession::LogonChallengeCallback(PreparedQueryResult result)
     else
         pkt << uint8(WOW_FAIL_VERSION_INVALID);
 
+    // NOTE: the 6-byte zero frames seen before each server message in the July captures are
+    // capture PHANTOMS, not wire data: each shares its TCP sequence number with the real
+    // message that follows, and the stream offset arithmetic closes perfectly only when they
+    // are excluded (analysis of C:\temp\ascension2.pcapng, 2026-10-04). The real server never
+    // sends them. Do NOT send them: as real bytes they shift the client's stream by six and
+    // stall it in LOGIN_STATE_AUTHENTICATING (observed 2026-10-04).
+    if (_isAscensionClient)
+    {
+        LOG_INFO("server.authserver", "Ascension challenge out ({} bytes): {}",
+            pkt.size(), Acore::Impl::ByteArrayToHexStr(pkt.contents(), pkt.size()));
+    }
     SendPacket(pkt);
 }
 
@@ -500,6 +562,27 @@ bool AuthSession::HandleLogonProof()
     // Read the packet
     sAuthLogonProof_C* logonProof = reinterpret_cast<sAuthLogonProof_C*>(GetReadBuffer().GetReadPointer());
 
+    if (_isAscensionClient)
+    {
+        // The official client's proof body is uninitialized filler it never expects the server
+        // to verify - the password was already checked from the encrypted hello. What the
+        // client waits for is the 44-byte reply [01 00][HMAC-SHA256(key_derived, "OK")][tail]
+        // that proves the server holds the matching key set; it then sends its 5-byte realm
+        // request.
+        static constexpr std::array<uint8, 10> tail = { 0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00 };
+        CoA::AscensionAuth::Bytes32 const proof = CoA::AscensionAuth::HmacSha256(_ascensionKeyDerived, "OK", 2);
+
+        ByteBuffer reply;
+        reply << uint8(AUTH_LOGON_PROOF) << uint8(0x00);
+        reply.append(proof.data(), proof.size());
+        reply.append(tail.data(), tail.size());
+        SendPacket(reply);
+
+        LOG_INFO("server.authserver", "Ascension custom auth: proof replied, session authorised");
+        _status = STATUS_AUTHED;
+        return true;
+    }
+
     // If the client has no valid version
     if (_expversion == NO_VALID_EXP_FLAG)
     {
@@ -508,11 +591,8 @@ bool AuthSession::HandleLogonProof()
         return false;
     }
 
-    Acore::Crypto::SRP6::ChallengeResponseDiagnostics diagnostics{};
-    Acore::Crypto::SRP6::ChallengeResponseDiagnostics* diagnosticOutput = _isAscensionLocalClient ? &diagnostics : nullptr;
-
     // Check if SRP6 results match (password is correct), else send an error
-    if (Optional<SessionKey> K = _srp6->VerifyChallengeResponse(logonProof->A, logonProof->clientM, diagnosticOutput))
+    if (Optional<SessionKey> K = _srp6->VerifyChallengeResponse(logonProof->A, logonProof->clientM))
     {
         _sessionKey = *K;
         // Check auth token
@@ -592,31 +672,13 @@ bool AuthSession::HandleLogonProof()
                 std::memcpy(packet.contents(), &proof, sizeof(proof));
             }
 
-            if (_isAscensionLocalClient)
-            {
-                LOG_INFO("server.authserver", "Sending stock logon proof response: bytes={} M2={}",
-                    packet.size(), GetSha1Fingerprint(M2));
-            }
-
             SendPacket(packet);
-
-            if (_isAscensionLocalClient)
-                LOG_INFO("server.authserver", "Queued stock logon proof response");
 
             _status = STATUS_AUTHED;
         }));
     }
     else
     {
-        if (_isAscensionLocalClient)
-        {
-            LOG_INFO("server.authserver",
-                "Ascension SRP fingerprints: A={} B={} salt={} clientM={} expectedM={} K={}",
-                GetSha1Fingerprint(logonProof->A), GetSha1Fingerprint(_srp6->B), GetSha1Fingerprint(_srp6->s),
-                GetSha1Fingerprint(logonProof->clientM), GetSha1Fingerprint(diagnostics.ExpectedClientM),
-                GetSha1Fingerprint(diagnostics.K));
-        }
-
         ByteBuffer packet;
         packet << uint8(AUTH_LOGON_PROOF);
         packet << uint8(WOW_FAIL_UNKNOWN_ACCOUNT);

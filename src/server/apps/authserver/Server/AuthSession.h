@@ -105,7 +105,10 @@ private:
     uint16 _build;
     uint8 _expversion;
     bool _loggedInitialPacket = false;
-    bool _isAscensionLocalClient = false;
+    bool _isAscensionClient = false;
+    std::array<uint8, 32> _ascensionKeyDerived = {};
+    std::array<uint8, 40> _ascensionKeySession = {};
+    std::string _ascensionPassword;
 
     QueryCallbackProcessor _queryProcessor;
 };

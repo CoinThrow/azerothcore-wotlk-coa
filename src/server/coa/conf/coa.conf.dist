@@ -21,6 +21,20 @@ CoA.PlaintextWorldHeaders = 1
 # Use a stock warrior shell until the classless progression backend is added.
 CoA.MapClass10ToWarrior = 1
 
+# Original-client authentication (X25519 + ChaCha20 wrapped hello, HMAC-SHA256(key_derived,
+# "OK") reply) instead of the stock SRP6 challenge/response. The password in the hello is
+# checked against the account's stored verifier. Requires the key set below; the matching
+# public key must be programmed into the client (KC1). 0 = stock SRP6 only.
+CoA.AscensionAuth = 0
+
+# Server X25519 private key used by CoA.AscensionAuth, 64 hex characters. The matching public
+# key is logged at startup and is the value the client must use.
+CoA.AscensionAuth.PrivateKey = ""
+
+# Optional cross-check, 64 hex characters: when set, custom auth is refused unless it matches
+# the public key of CoA.AscensionAuth.PrivateKey.
+CoA.AscensionAuth.PublicKey = ""
+
 # Log each consumed extension packet during protocol discovery.
 CoA.LogConsumedPackets = 1
 
