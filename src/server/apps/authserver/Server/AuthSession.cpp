@@ -579,6 +579,24 @@ bool AuthSession::HandleLogonProof()
         SendPacket(reply);
 
         LOG_INFO("server.authserver", "Ascension custom auth: proof replied, session authorised");
+
+        // Hand the custom session key to the world handoff. The worldserver initialises its
+        // header cipher and validates the client's CMSG_AUTH_SESSION digest from
+        // account.session_key, so it must be the client's 40-byte key_session - the stock SRP6
+        // path below stores _sessionKey the same way. Without this every world connect fails
+        // its digest check (AUTH_FAILED) immediately after the auth completes.
+        _sessionKey = _ascensionKeySession;
+
+        std::string ascAddress = sConfigMgr->GetOption<bool>("AllowLoggingIPAddressesInDatabase", true, true)
+            ? GetRemoteIpAddress().to_string() : "0.0.0.0";
+        LoginDatabasePreparedStatement* ascStmt = LoginDatabase.GetPreparedStatement(LOGIN_UPD_LOGONPROOF);
+        ascStmt->SetData(0, _sessionKey);
+        ascStmt->SetData(1, ascAddress);
+        ascStmt->SetData(2, GetLocaleByName(_localizationName));
+        ascStmt->SetData(3, _os);
+        ascStmt->SetData(4, _accountInfo.Login);
+        LoginDatabase.Execute(ascStmt);
+
         _status = STATUS_AUTHED;
         return true;
     }
