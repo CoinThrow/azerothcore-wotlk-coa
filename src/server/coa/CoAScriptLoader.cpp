@@ -388,6 +388,7 @@ void AddSC_AscensionClassBundleStore();
 void AddSC_AscensionHeirloomWeaponStore();
 void AddSC_AscensionLfgObjective();
 void AddSC_AscensionBushcraft();
+void AddSC_AscensionVoidPortal();
 
 void AddSC_XPHotspots();
 
@@ -778,4 +779,5 @@ void AddCoAScripts()
     AddSC_AscensionHeirloomWeaponStore();
     AddSC_AscensionLfgObjective();
     AddSC_AscensionBushcraft();
+    AddSC_AscensionVoidPortal();
 }
